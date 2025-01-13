@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clase.engenios_manuelimdbapp_v20.adapters.MovieAdapters;
+import com.clase.engenios_manuelimdbapp_v20.api.IMDBApiClient;
 import com.clase.engenios_manuelimdbapp_v20.api.IMDBApiService;
 import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentHomeBinding;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
@@ -47,6 +48,7 @@ public class HomeFragment extends Fragment {
     private int respuestasCorrectas = 0; // Variable para contar si todo se ha cargado correctamente
     private Toast mensajeToast = null; // Variable para controlar los Toast de este fragmento
     private final List<Call<?>> llamadasActivas = new ArrayList<>(); // Variable con la lista de llamadas para cancelarlas en caso de ser necesario
+    private String apiKey = null;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -117,6 +119,8 @@ public class HomeFragment extends Fragment {
      * de controlar el hecho de poder recibir y manejar los errores y excepciones que
      * puedan surgir*/
     private void loadTopRatedMoviesAndTvShows() {
+        // Obtengo la key con la que voy a ejecutar el comando
+        apiKey = IMDBApiClient.getApiKey();
         // Creo un objeto de tipo llamada a la API indicando el método con el que vamos a enlazar el endpoint y le indicamos que lo
         // obtenemos en inglés con el parametro US
         Call<PopularMovieResponse> call = imdbApiService.getTopMeterTitles("US");
@@ -184,8 +188,12 @@ public class HomeFragment extends Fragment {
                         // Lanzamos por el LogCat el error o mensaje de advertencia de que no hay título disponibles
                         Log.e("HomeFragment", "No hay títulos disponibles");
                     }
-                } else { // En caso de que la respuesta sea mala o sea nula
-                    // Lanzamos por el LogCat el error de la respuesta
+                }else if (response.code() == 429) {
+                    // Límite alcanzado: cambiar clave API y reintentar
+                    Log.e("HomeFragment", "Límite de solicitudes alcanzado. Cambiando API Key.");
+                    IMDBApiClient.switchApiKey();
+                    loadTopRatedMoviesAndTvShows();
+                } else {
                     Log.e("HomeFragment", "Error en la respuesta: " + response.message());
                 }
             }
