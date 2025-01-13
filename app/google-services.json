@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109268670153",
+    "project_id": "engenios-manuelimdbappv20",
+    "storage_bucket": "engenios-manuelimdbappv20.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109268670153:android:866cc48d377022bd955f18",
+        "android_client_info": {
+          "package_name": "com.clase.engenios_manuelimdbapp_v20"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUF9mjgxbL4W9HR3YpIsOEkUBevg0fGe4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
