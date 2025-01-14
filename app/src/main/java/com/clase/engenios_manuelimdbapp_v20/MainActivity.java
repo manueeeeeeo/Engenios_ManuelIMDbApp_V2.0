@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView infoNombre = null; // Variables para manejar el textview del nombre del usuario
     private ImageView infoUrlFoto = null; // Variable para manejar la imageview de la foto de perfil del usuario
     private String email = null; // Variable para manejar el email que obtenemos del anterior Intent
+    private Toast mensajeToast = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +63,21 @@ public class MainActivity extends AppCompatActivity {
 
         // Creo un intent que lo que hace es obtener lo que le enviamos desde el login (siempre ha de recibir algo)
         Intent intent = getIntent();
-        // Creamos una variable de tipo nombre donde cargamos el nombre del usuario
-        nombre = intent.getStringExtra("name");
-        // Creamos una variable de tipo email donde cargamos el email del usuario
-        email = intent.getStringExtra("email");
-        // Creamos una variable de tipo url de la foto de perfil donde cargamos la url del usuario
-        imagenUrl = intent.getStringExtra("photoUrl");
+        if(intent.getStringExtra("message").equals("Conectado por Facebook")){
+            // Creamos una variable de tipo nombre donde cargamos el nombre del usuario
+            nombre = intent.getStringExtra("name");
+            // Creamos una variable de tipo url de la foto de perfil donde cargamos la url del usuario
+            imagenUrl = intent.getStringExtra("photoUrl");
+        }else if(intent.getStringExtra("message").equals("Conectado por Google")){
+            // Creamos una variable de tipo nombre donde cargamos el nombre del usuario
+            nombre = intent.getStringExtra("name");
+            // Creamos una variable de tipo email donde cargamos el email del usuario
+            email = intent.getStringExtra("email");
+            // Creamos una variable de tipo url de la foto de perfil donde cargamos la url del usuario
+            imagenUrl = intent.getStringExtra("photoUrl");
+        }else{
+            showToast("Ese método de sesión no está activado");
+        }
 
         // Compruebo la variable y lo que tengo guardo en el sharedPreferences
         if(correo.equals("nada")){ // En caso de que el correo sea igual a nada
@@ -110,8 +121,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Establezco al TextView del nombre de usuario el valor del nombre
         infoNombre.setText(nombre);
-        // Establezco al TextView del email de usuario el valor del email
-        infoCorreo.setText(email);
+
+        if(email==null){
+            infoCorreo.setText("Conecto con Facebook");
+        }else{
+            // Establezco al TextView del email de usuario el valor del email
+            infoCorreo.setText(email);
+        }
 
         // Comprobamos que dentro de la variable que contiene la url de la foto de perfil haya algo
         if (imagenUrl != null && !imagenUrl.isEmpty()) {
@@ -161,5 +177,23 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    /**
+     * @param mensaje
+     * Método para ir matando los Toast y mostrar todos en el mismo para evitar
+     * colas de Toasts y que se ralentice el dispositivo*/
+    public void showToast(String mensaje){
+        if (this != null){
+            // Comprobamos si existe algun toast cargado en el toast de la variable global
+            if (mensajeToast != null) { // En caso de que si que exista
+                mensajeToast.cancel(); // Le cancelamos, es decir le "matamos"
+            }
+
+            // Creamos un nuevo Toast con el mensaje que nos dan de argumento en el método
+            mensajeToast = Toast.makeText(this, mensaje, Toast.LENGTH_SHORT);
+            // Mostramos dicho Toast
+            mensajeToast.show();
+        }
     }
 }

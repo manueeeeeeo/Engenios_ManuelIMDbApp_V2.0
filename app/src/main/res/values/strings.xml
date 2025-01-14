@@ -12,4 +12,8 @@
     <string name="menu_slideshow">Buscar Película</string>
 
     <string name="client_id">109268670153-s2amnspfqgq6b0pdde8b1qncvj8p450j.apps.googleusercontent.com</string>
+
+    <string name="facebook_app_id">869713218448498</string>
+    <string name="fb_login_protocol_scheme">fb869713218448498</string>
+    <string name="facebook_client_token">EAAMWZCZBNxLHIBOxg4iTTyer0MnYrkhqWVHTkHjcCPObitQAqnb4wbPYaODhTbAGhCqQ8xUHTexQHbiblTsPQVsJ8Jm4ZBkOo9qykWAPDb24fWqTZBfww9JGPQ4aqQZCVLGEm6mg90mDBhuvAZAdFlpBOMHUFZCVrRp2z51OBf9tAg4FMrpvmYHp0nI9MVT9hzMGLHh29sQRwXpYQEdCb4Kr84D0syS5KnZA5A9ZAMqtmjxQq8m4LIJKDGbm3ny8ZAGwZDZD</string>
 </resources>
