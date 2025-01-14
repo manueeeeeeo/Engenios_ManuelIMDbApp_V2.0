@@ -89,6 +89,7 @@ public class HomeFragment extends Fragment {
 
                     // Verificamos si la respuesta tiene un error 429, que ya hemos llegado a las 500 respuestas
                     if (response.code() == 429) {
+                        // Lanzo en el LogCat el error ocasionado, que es que ya hemos alcanzado el limite de la api
                         Log.w("Interceptor", "Límite de solicitudes alcanzado. Cambiando API Key.");
                         response.close(); // Cerramos la respuesta actual
 
