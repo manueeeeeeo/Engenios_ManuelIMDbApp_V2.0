@@ -15,6 +15,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.facebook.CallbackManager;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -38,6 +40,8 @@ public class Inicio extends AppCompatActivity {
     private SignInButton signInButton=null; // Variable para el botón de incio de sesión co Google
     private GoogleSignInClient googleSignInClient=null; // Variable para representar la instancia del flujo de datos en el inicio de sesión con Gogle
     private ActivityResultLauncher<Intent> signInLauncher=null; // Variable para controlar si el inicio de sesión fue correcto, fallo, etc
+    private CallbackManager callbackManager = null;
+    private LoginButton loginButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +50,15 @@ public class Inicio extends AppCompatActivity {
 
         // Obtengo la instancia de la autentificación de firebase
         auth = FirebaseAuth.getInstance();
+
+        // Inicializa CallbackManager de Facebook
+        callbackManager = CallbackManager.Factory.create();
+
+        // Obtengo el componente de Login With Facebook de la interfaz
+        loginButton = findViewById(R.id.facebook_login_button);
+        // Establezco los permisos que necesitamos para acceder al Facebook
+        loginButton.setPermissions("email", "public_profile");
+
 
         // Obtengo el elemento del botón de iniciar sesión con Google
         signInButton = findViewById(R.id.sign_in_button);

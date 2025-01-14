@@ -3,6 +3,10 @@ package com.clase.engenios_manuelimdbapp_v20.api;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Manuel
+ * @version 1.0*/
+
 public class RapidApiKeyManager {
     private List<String> apiKeys = new ArrayList<>();
     private int currentKeyIndex = 0;
