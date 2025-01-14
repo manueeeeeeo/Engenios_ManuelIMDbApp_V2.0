@@ -12,7 +12,7 @@ public class RapidApiKeyManager {
         // Agrega aquí tus claves de RapidAPI
         apiKeys.add("45157d396bmshf14702227e85da3p1ff7a9jsna860971b474a");
         apiKeys.add("2f2412d974msh6d1124b73789023p1ca9dfjsn6e660867f17c");
-        apiKeys.add("2d4355b846mshc466fa63c246723p12a355jsnc0a3ef230019");
+        apiKeys.add("");
     }
 
     // Obtiene la clave API actual

@@ -58,7 +58,11 @@ public class HomeFragment extends Fragment {
         // Limpio la lista de películas al iniciar el HomeFragment para evitar posibles errores y duplicaciones
         movieList.clear();
 
+        // Inicializo a 0 el contador de respuestas correctas
         respuestasCorrectas = 0;
+
+        // Obtengo en el string de key de la api la key de ese momento
+        apiKey = IMDBApiClient.getApiKey();
 
         // Obtengo el reyclerView
         recyclerView = binding.recyclerView;
@@ -73,30 +77,43 @@ public class HomeFragment extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder()
                 // Agrego un interceptor que nos permite obtener la solicitud de conexión antes de enviarla
                 .addInterceptor(chain -> {
-                    // Creamos una nueva solicitud basandonos en la original
+                    // Creamos una nueva solicitud basada en la original
                     Request newRequest = chain.request().newBuilder()
                             // Establecemos un encabezado con el token para acceder a la conexión segura
-                            .addHeader("X-RapidAPI-Key", "2d4355b846mshc466fa63c246723p12a355jsnc0a3ef230019")
-                            // Establecemos un encabezado con el host al que vamos a solicitar conectarnos
-                            .addHeader("X-RapidAPI-Host", "imdb-com.p.rapidapi.com")
+                            .addHeader("X-RapidAPI-Key", apiKey) // Usa la clave dinámica
+                            .addHeader("X-RapidAPI-Host", "imdb-com.p.rapidapi.com") // Host de la API
                             .build(); // Confirmamos las configuraciones de la conexión
-                    // Devolvemos y enviamos la solicitud
-                    return chain.proceed(newRequest);
+
+                    // Creo una respuesta para poder ver si nos pasamos de peticiones o no
+                    okhttp3.Response response = chain.proceed(newRequest);
+
+                    // Verificamos si la respuesta tiene un error 429, que ya hemos llegado a las 500 respuestas
+                    if (response.code() == 429) {
+                        Log.w("Interceptor", "Límite de solicitudes alcanzado. Cambiando API Key.");
+                        response.close(); // Cerramos la respuesta actual
+
+                        IMDBApiClient.switchApiKey(); // Cambiamos a la siguiente clave
+
+                        // Reintentamos la solicitud con la nueva clave
+                        Request retriedRequest = newRequest.newBuilder()
+                                .removeHeader("X-RapidAPI-Key")
+                                .addHeader("X-RapidAPI-Key", apiKey)
+                                .build();
+                        return chain.proceed(retriedRequest);
+                    }
+
+                    return response; // Devolvemos la respuesta si no hay error
                 })
-                .connectTimeout(30, TimeUnit.SECONDS) // Establezco el tiempo maximo al intentar conectarnos
-                .readTimeout(30, TimeUnit.SECONDS) // Establezco el tiempo maximo de lectura de la conexión
+                .connectTimeout(30, TimeUnit.SECONDS) // Tiempo máximo para la conexión
+                .readTimeout(30, TimeUnit.SECONDS) // Tiempo máximo de lectura
                 .build(); // Confirmamos y construimos nuestro cliente
 
-        // Utilizo el objeto retrofit que me permite convetir objetos de dificiles a faciles de obtener y usar
+        // Utilizo el objeto retrofit que me permite convertir objetos difíciles a fáciles de obtener y usar
         Retrofit retrofit = new Retrofit.Builder()
-                // Establecemos cual es la dirección principal para las solicitud de conexión
-                .baseUrl("https://imdb-com.p.rapidapi.com/")
-                // Establecemos el cliente que se va a conectar que es el que hemos creado antes
-                .client(client)
-                // Establecemos que la respuesta que nos de el Host que lo pase a un JSON
-                .addConverterFactory(GsonConverterFactory.create())
-                // Confirmamos y construimos nuestras configuraciones
-                .build();
+                .baseUrl("https://imdb-com.p.rapidapi.com/") // Dirección principal para las solicitudes
+                .client(client) // Cliente HTTP configurado con manejo de claves dinámicas
+                .addConverterFactory(GsonConverterFactory.create()) // Conversor JSON
+                .build(); // Confirmamos y construimos nuestras configuraciones
 
         // Doy valor al objeto de imdbApiService con el retrofie que lo que nos permite es llamar a los métodos de la API como si fueran métodos Java
         imdbApiService = retrofit.create(IMDBApiService.class);
@@ -119,8 +136,6 @@ public class HomeFragment extends Fragment {
      * de controlar el hecho de poder recibir y manejar los errores y excepciones que
      * puedan surgir*/
     private void loadTopRatedMoviesAndTvShows() {
-        // Obtengo la key con la que voy a ejecutar el comando
-        apiKey = IMDBApiClient.getApiKey();
         // Creo un objeto de tipo llamada a la API indicando el método con el que vamos a enlazar el endpoint y le indicamos que lo
         // obtenemos en inglés con el parametro US
         Call<PopularMovieResponse> call = imdbApiService.getTopMeterTitles("US");
