@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private String email = null; // Variable para manejar el email que obtenemos del anterior Intent
     private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
     private String message = null; // Variable para almacenar el mensaje que recibo del otro Intent y así inicio sesión y cierro
+    private String uid = null; // Variable para almacenar y manejar el uid del usuario con sesion iniciada
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         // Cargo en la variable que he creado el email del usuario y en caso de que no exista ningun registro ponemos el valor de nada
         correo = sharedPreferences.getString("emailUsuario", "nada");
+        // Cargo en la variable que he creado el uid del usuario y en caso de que no exista ningun registro ponemos el valor de nada
+        uIdUsuario = sharedPreferences.getString("uIdUsuario", "nada");
 
         // Obtengo el Intent a traves del cual he accedido a esta Actividad
         Intent intent = getIntent();
@@ -72,11 +75,13 @@ public class MainActivity extends AppCompatActivity {
                 // Proceso los datos de Facebook
                 nombre = intent.getStringExtra("name");
                 imagenUrl = intent.getStringExtra("photoUrl");
+                uid = intent.getStringExtra("uidUs");
             } else if (message.equals("Conectado por Google")) { // En caso de que sea Google
                 // Proceso los datos de Google
                 nombre = intent.getStringExtra("name");
                 email = intent.getStringExtra("email");
                 imagenUrl = intent.getStringExtra("photoUrl");
+                uid = intent.getStringExtra("uidUs");
             } else { // En caso de que sea otro método de inicio de sesión
                 // Lanzo un toast diciendo que ese método de inicio de sesión no está activado
                 showToast("Ese método de sesión no está activado");
@@ -98,6 +103,22 @@ public class MainActivity extends AppCompatActivity {
                 // Guardo el nuevo email en las preferencias y confirmo los cambios
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("emailUsuario", email);
+                editor.apply();
+            }
+        }
+
+        // Compruebo la variable y lo que tengo guardo en el sharedPreferences
+        if(uIdUsuario.equals("nada")){ // En caso de que el uid sea igual a nada
+            // Guardo y confirmo los cambios respecto al valor del email en preferencias
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("uIdUsuario", uid);
+            editor.apply();
+        }else{ // Si el correo es distinto de nada
+            // Compruebo si es el mismo email o no
+            if(!uIdUsuario.equals(uid)){ // En caso de que sea otro uid diferente
+                // Guardo el nuevo email en las preferencias y confirmo los cambios
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("uIdUsuario", uid);
                 editor.apply();
             }
         }

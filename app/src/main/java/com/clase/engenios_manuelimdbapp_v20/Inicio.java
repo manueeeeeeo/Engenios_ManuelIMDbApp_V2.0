@@ -182,6 +182,8 @@ public class Inicio extends AppCompatActivity {
                                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                                             intent.putExtra("name", user.getDisplayName());
                                             intent.putExtra("photoUrl", photoUrl);
+                                            // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                                            intent.putExtra("uidUs", user.getUid());
                                             intent.putExtra("message", "Conectado por Facebook");
                                             startActivity(intent);
                                             finish();
@@ -243,6 +245,8 @@ public class Inicio extends AppCompatActivity {
                             intent.putExtra("email", user.getEmail());
                             // Establezco como parceable la key y el valor de la url de la foto de usuario de la cuenta que inicio
                             intent.putExtra("photoUrl", user.getPhotoUrl().toString());
+                            // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                            intent.putExtra("uidUs", user.getUid());
                             // Establezco como parceable la key y el valor del mensaje para saber si está resgitrado con Google o Facebook
                             intent.putExtra("message", "Conectado por Google");
                             // Iniciamos la actividad ya con el objeto parceable introducido y todo
@@ -291,6 +295,8 @@ public class Inicio extends AppCompatActivity {
                 // Establezco como dato la url del usuario que ha iniciado sesión
                 intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
                 intent.putExtra("message", "Conectado por Google"); // Establezco el mensaje de conectado con
+                // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                intent.putExtra("uidUs", currentUser.getUid());
 
                 // Inicio la actividad
                 startActivity(intent);
@@ -312,6 +318,8 @@ public class Inicio extends AppCompatActivity {
                                         photoUrl = pictureData.getString("url");
                                     }
 
+                                    // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                                    intent.putExtra("uidUs", currentUser.getUid());
                                     // Establezco la foto de perfil si se obtiene correctamente
                                     intent.putExtra("photoUrl", photoUrl);
                                     intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con

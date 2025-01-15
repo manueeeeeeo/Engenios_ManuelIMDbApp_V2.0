@@ -32,6 +32,7 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
     private Toast mensajeToast = null; // Toast para mostrar mensajes
     private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario
     private String email = null; // Variable donde guardare y cargare el correo del usuario con la seión iniciada
+    private String uid = null; // Varibel donde guardare y cargare el correo del usuario con la sesión iniciada
 
     /**
      * @param context
@@ -60,6 +61,9 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
 
         // Cargo en la variable de email el email guardado en las preferencias
         email = sharedPreferences.getString("emailUsuario", "nada");
+
+        // Cargo en la variable el uid guardado en las preferencias
+        uid = sharedPreferences.getString("uIdUsuario", "nada");
 
         // Procedo a cargar la imagen de la portada con Picasso
         Picasso.get()
@@ -93,7 +97,7 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
                 FavoriteMoviesDatabase database = new FavoriteMoviesDatabase(context);
 
                 // En caso de que se pueda eliminar la pelicula basandonos en su Id de Pelicula y que este id seá mayor que 0
-                if (database.borrarFavorita(movie.getId(), email)>0) {
+                if (database.borrarFavorita(movie.getId(), uid)>0) {
                     // Lanzamos un toast al usuario avisando que se ha eliminado la pelicula
                     showToast("Película eliminada de favoritos");
                     // Removemos de la lista de peliculas la posición a la cual hemos hecho el on long click

@@ -31,6 +31,7 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
     private Toast mensajeToast = null; // Toast para el manejo de los mensajes
     private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario
     private String email = null; // Variable donde cargaré y manejaré el email del usuario con la sesión inciada
+    private String uid = null; // Variable donde cargaré y manejaré el uid del usuario con la sesión iniciada
 
     /**
      * @param context
@@ -60,6 +61,9 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
 
         // Cargo en la variable email el correo del usuario con la sesión inciada
         email = sharedPreferences.getString("emailUsuario", "nada");
+
+        // Cargo en la variable uid del usuario con la sesión iniciada
+        uid = sharedPreferences.getString("uIdUsuario", "nada");
 
         // Procedo a cargar la imagen de la portada con Picasso
         Picasso.get()
@@ -115,9 +119,9 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
                     showToast("No podemos cargar todos los datos de la película, pruebe más tarde!!");
                 }else{ // En caso de que no sean nulos
                     // En caso de que la película todavia no esté insertada en la bd
-                    if (!database.existeEnLaBD(movieId, email)) {
+                    if (!database.existeEnLaBD(movieId, uid)) {
                         // Utilizo el método de insertar en la bd, pasandole los datos necesarios
-                        long result = database.insertarFavorita(movieId, urlIm, moviTit, fechaPe, des, val, email);
+                        long result = database.insertarFavorita(movieId, urlIm, moviTit, fechaPe, des, val, uid);
                         // Basandome en la respuesta del método anterior haremos una cosa u otra
                         if (result != -1) { // En caso de que el resultado sea diferente de -1
                             // Lanzamos un toast al usuario indicando que hemos agregado la película a la lista de favoritos
