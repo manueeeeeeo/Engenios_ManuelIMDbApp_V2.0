@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.snackbar.Snackbar;
@@ -47,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView infoNombre = null; // Variables para manejar el textview del nombre del usuario
     private ImageView infoUrlFoto = null; // Variable para manejar la imageview de la foto de perfil del usuario
     private String email = null; // Variable para manejar el email que obtenemos del anterior Intent
-    private Toast mensajeToast = null;
+    private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
+    private String message = null; // Variable para almacenar el mensaje que recibo del otro Intent y así inicio sesión y cierro
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Obtengo el Intent a traves del cual he accedido a esta Actividad
         Intent intent = getIntent();
-        // Obtengo el mensaje
-        String message = intent.getStringExtra("message");
+        // Obtengo el mensaje del Intent
+        message = intent.getStringExtra("message");
         if (message != null) { // Compruebo que el mensaje no sea nulo
             if (message.equals("Conectado por Facebook")) { // En caso de que sea Facebook
                 // Proceso los datos de Facebook
@@ -164,11 +166,21 @@ public class MainActivity extends AppCompatActivity {
      * la sesión y volvamos a la actividad de Login aunque volvamos a pulsar el botón de iniciar con Google,
      * que nos vuelva a dejar elegir la cuenta de Google con la que queremos iniciar sesión*/
     private void signOut() {
+        // Compruebo si el mensaje es que hemos conectado por facebook o por google
+        if (message.equals("Conectado por Facebook")) { // En caso de habernos conectado por Facebook
+            // Cerramos la sesión de Facebook
+            LoginManager.getInstance().logOut();
+            // Lanzamos un Toast diciendo que hemos cerrado la sesión de la cuenta de Facebook
+            showToast("Sesión cerrada con Facebook");
+        } else if (message.equals("Conectado por Google")) { // En caso de habernos conectado por Google
+            // Establecemos que el cliente del objeto de GoogleSingIn también cierre la sesión
+            GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+            // Lanzamos un Toast diciendo que hemos cerrado la sesión de la cuenta de Google
+            showToast("Sesión cerrada con Google");
+        }
+
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
         auth.signOut();
-
-        // Establecemos que el cliente del objeto de GoogleSingIn también cierre la sesión
-        GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
 
         // Creamos un nuevo Intent para redirigir el usuario a la actividad de Inicio
         Intent intent = new Intent(MainActivity.this, Inicio.class);

@@ -18,6 +18,8 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -36,6 +38,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserInfo;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * @author Manuel
@@ -149,26 +154,59 @@ public class Inicio extends AppCompatActivity {
     }
 
     private void tokenAccesoFacebook(AccessToken token) {
+        // Obtengo la credencial con la que voy a iniciar sesión en Firebase
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+
+        // Intento autenticar al usuario con Firebase y Facebook
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            // Si todo fue exitoso
                             FirebaseUser user = auth.getCurrentUser();
-                            Intent intent = new Intent(Inicio.this, MainActivity.class);
-                            intent.putExtra("name", user.getDisplayName());
-                            intent.putExtra("photoUrl", user.getPhotoUrl().toString());
-                            intent.putExtra("message", "Conectado por Facebook");
-                            startActivity(intent);
-                            finish();
+
+                            // Solicito los detalles del perfil de Facebook usando la API de Graph
+                            GraphRequest request = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+                                @Override
+                                public void onCompleted(JSONObject object, GraphResponse response) {
+                                    if (response.getError() == null) {
+                                        try {
+                                            String facebookUserId = object.getString("id");
+                                            String photoUrl = null;
+                                            if (object.has("picture")) {
+                                                JSONObject pictureData = object.getJSONObject("picture").getJSONObject("data");
+                                                photoUrl = pictureData.getString("url");
+                                            }
+
+                                            Intent intent = new Intent(Inicio.this, MainActivity.class);
+                                            intent.putExtra("name", user.getDisplayName());
+                                            intent.putExtra("photoUrl", photoUrl);
+                                            intent.putExtra("message", "Conectado por Facebook");
+                                            startActivity(intent);
+                                            finish();
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                            showToast("Error al obtener la foto de perfil.");
+                                        }
+                                    } else {
+                                        showToast("Error en la solicitud de perfil de Facebook.");
+                                    }
+                                }
+                            });
+
+                            Bundle parameters = new Bundle();
+                            parameters.putString("fields", "id,name,picture.type(large)");
+                            request.setParameters(parameters);
+                            request.executeAsync();
                         } else {
                             Log.w("Inicio", "signInWithCredential:failure", task.getException());
-                            showToast("Autenticación fallida");
+                            showToast("Autenticación fallida "+task.getException());
                         }
                     }
                 });
     }
+
 
     /**
      * Método en el que lo que consigo es pedir a Google que inicie el flujo de inicio de sesión
@@ -232,6 +270,7 @@ public class Inicio extends AppCompatActivity {
         FirebaseUser currentUser = auth.getCurrentUser();
         // Creo una variable para más adelante cargar el id del proveedor
         String providerId = null;
+        String photoUrl = null;
 
         // Compruebo que se obtiene algo
         if (currentUser != null) {
@@ -245,23 +284,63 @@ public class Inicio extends AppCompatActivity {
             Intent intent = new Intent(Inicio.this, MainActivity.class);
             // Establezco como dato el nombre del usuario que ha iniciado sesión
             intent.putExtra("name", currentUser.getDisplayName());
-            // Establezco como dato la url del usuario que ha iniciado sesión
-            intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
 
             // Compruebo desde que proveedor he iniciado sesión
             if (providerId.equalsIgnoreCase("google.com")) { // En caso de ser desde google
                 intent.putExtra("email", currentUser.getEmail()); // Establezco el email
+                // Establezco como dato la url del usuario que ha iniciado sesión
+                intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
                 intent.putExtra("message", "Conectado por Google"); // Establezco el mensaje de conectado con
-            } else if (providerId.equalsIgnoreCase("facebook.com")) { // En caso de ser desde facebook
-                intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con
-            } else { // En caso de ser desde otro
-                intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con
-            }
 
-            // Inicio la actividad
-            startActivity(intent);
-            // Finalizo la actividad actual
-            finish();
+                // Inicio la actividad
+                startActivity(intent);
+                // Finalizo la actividad actual
+                finish();
+            } else if (providerId.equalsIgnoreCase("facebook.com")) { // En caso de ser desde facebook
+                AccessToken accessToken = AccessToken.getCurrentAccessToken();
+                if (accessToken != null && !accessToken.isExpired()) {
+                    // Solicitar los detalles del perfil de Facebook usando la API de Graph
+                    GraphRequest request = GraphRequest.newMeRequest(accessToken, new GraphRequest.GraphJSONObjectCallback() {
+                        @Override
+                        public void onCompleted(JSONObject object, GraphResponse response) {
+                            if (response.getError() == null) {
+                                try {
+                                    // Obtener la foto de perfil de Facebook
+                                    String photoUrl = null;
+                                    if (object.has("picture")) {
+                                        JSONObject pictureData = object.getJSONObject("picture").getJSONObject("data");
+                                        photoUrl = pictureData.getString("url");
+                                    }
+
+                                    // Establezco la foto de perfil si se obtiene correctamente
+                                    intent.putExtra("photoUrl", photoUrl);
+                                    intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con
+
+                                    // Inicio la actividad
+                                    startActivity(intent);
+                                    // Finalizo la actividad actual
+                                    finish();
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                    showToast("Error al obtener la foto de perfil.");
+                                }
+                            } else {
+                                showToast("Error en la solicitud de perfil de Facebook.");
+                            }
+                        }
+                    });
+
+                    // Solicitar los datos del perfil (id, nombre y foto)
+                    Bundle parameters = new Bundle();
+                    parameters.putString("fields", "id,name,picture.type(large)");
+                    request.setParameters(parameters);
+                    request.executeAsync();
+                }
+            } else { // En caso de ser desde otro
+                intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+                startActivity(intent);
+                finish(); // Finalizo la actividad
+            }
         }
     }
 
