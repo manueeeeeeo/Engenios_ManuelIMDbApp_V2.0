@@ -230,31 +230,38 @@ public class Inicio extends AppCompatActivity {
 
         // Obtengo el usuario autenticado del dispotivo
         FirebaseUser currentUser = auth.getCurrentUser();
+        // Creo una variable para más adelante cargar el id del proveedor
+        String providerId = null;
+
         // Compruebo que se obtiene algo
         if (currentUser != null) {
             // Obtengo los datos de los proveedores
             for (UserInfo userInfo : currentUser.getProviderData()) {
-                String providerId = userInfo.getProviderId();
-
-                Intent intent = new Intent(Inicio.this, MainActivity.class);
-                intent.putExtra("name", currentUser.getDisplayName());
-                intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
-
-                // Determino el proveedor y envío el mensaje correspondiente
-                if (providerId.equals("google.com")) {
-                    intent.putExtra("email", currentUser.getEmail());
-                    intent.putExtra("message", "Conectado por Google");
-                } else if (providerId.equals("facebook.com")) {
-                    intent.putExtra("message", "Conectado por Facebook");
-                } else {
-                    intent.putExtra("message", "Conectado por otro método");
-                }
-
-                // Inicio la actividad
-                startActivity(intent);
-                finish();
-                break;
+                // Guardo en la variable creada el id del proveedor
+                providerId = userInfo.getProviderId();
             }
+
+            // Creo el Intent
+            Intent intent = new Intent(Inicio.this, MainActivity.class);
+            // Establezco como dato el nombre del usuario que ha iniciado sesión
+            intent.putExtra("name", currentUser.getDisplayName());
+            // Establezco como dato la url del usuario que ha iniciado sesión
+            intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
+
+            // Compruebo desde que proveedor he iniciado sesión
+            if (providerId.equalsIgnoreCase("google.com")) { // En caso de ser desde google
+                intent.putExtra("email", currentUser.getEmail()); // Establezco el email
+                intent.putExtra("message", "Conectado por Google"); // Establezco el mensaje de conectado con
+            } else if (providerId.equalsIgnoreCase("facebook.com")) { // En caso de ser desde facebook
+                intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con
+            } else { // En caso de ser desde otro
+                intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con
+            }
+
+            // Inicio la actividad
+            startActivity(intent);
+            // Finalizo la actividad actual
+            finish();
         }
     }
 

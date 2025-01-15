@@ -61,22 +61,27 @@ public class MainActivity extends AppCompatActivity {
         // Cargo en la variable que he creado el email del usuario y en caso de que no exista ningun registro ponemos el valor de nada
         correo = sharedPreferences.getString("emailUsuario", "nada");
 
-        // Creo un intent que lo que hace es obtener lo que le enviamos desde el login (siempre ha de recibir algo)
+        // Obtengo el Intent a traves del cual he accedido a esta Actividad
         Intent intent = getIntent();
-        if(intent.getStringExtra("message").equals("Conectado por Facebook")){
-            // Creamos una variable de tipo nombre donde cargamos el nombre del usuario
-            nombre = intent.getStringExtra("name");
-            // Creamos una variable de tipo url de la foto de perfil donde cargamos la url del usuario
-            imagenUrl = intent.getStringExtra("photoUrl");
-        }else if(intent.getStringExtra("message").equals("Conectado por Google")){
-            // Creamos una variable de tipo nombre donde cargamos el nombre del usuario
-            nombre = intent.getStringExtra("name");
-            // Creamos una variable de tipo email donde cargamos el email del usuario
-            email = intent.getStringExtra("email");
-            // Creamos una variable de tipo url de la foto de perfil donde cargamos la url del usuario
-            imagenUrl = intent.getStringExtra("photoUrl");
-        }else{
-            showToast("Ese método de sesión no está activado");
+        // Obtengo el mensaje
+        String message = intent.getStringExtra("message");
+        if (message != null) { // Compruebo que el mensaje no sea nulo
+            if (message.equals("Conectado por Facebook")) { // En caso de que sea Facebook
+                // Proceso los datos de Facebook
+                nombre = intent.getStringExtra("name");
+                imagenUrl = intent.getStringExtra("photoUrl");
+            } else if (message.equals("Conectado por Google")) { // En caso de que sea Google
+                // Proceso los datos de Google
+                nombre = intent.getStringExtra("name");
+                email = intent.getStringExtra("email");
+                imagenUrl = intent.getStringExtra("photoUrl");
+            } else { // En caso de que sea otro método de inicio de sesión
+                // Lanzo un toast diciendo que ese método de inicio de sesión no está activado
+                showToast("Ese método de sesión no está activado");
+            }
+        } else { // De ser nulo
+            // Lanzo un Toast avisando al usuario del lo ocurrido
+            showToast("No se recibió información de inicio de sesión");
         }
 
         // Compruebo la variable y lo que tengo guardo en el sharedPreferences
@@ -122,9 +127,11 @@ public class MainActivity extends AppCompatActivity {
         // Establezco al TextView del nombre de usuario el valor del nombre
         infoNombre.setText(nombre);
 
-        if(email==null){
-            infoCorreo.setText("Conecto con Facebook");
-        }else{
+        // Compruebo el mensaje que recibo
+        if(message.equals("Conectado por Facebook")){ // En caso de ser Conectado por Facebook
+            // Muestro el mensaje en donde veriamos el correo
+            infoCorreo.setText(message);
+        }else{ // En caso de ser otro valor
             // Establezco al TextView del email de usuario el valor del email
             infoCorreo.setText(email);
         }
