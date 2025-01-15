@@ -5,16 +5,24 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -25,9 +33,14 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.UserInfo;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * @author Manuel
@@ -38,14 +51,48 @@ public class Inicio extends AppCompatActivity {
     private SignInButton signInButton=null; // Variable para el botón de incio de sesión co Google
     private GoogleSignInClient googleSignInClient=null; // Variable para representar la instancia del flujo de datos en el inicio de sesión con Gogle
     private ActivityResultLauncher<Intent> signInLauncher=null; // Variable para controlar si el inicio de sesión fue correcto, fallo, etc
+    private CallbackManager callbackManager = null;
+    private LoginButton loginButton = null;
+    private Toast mensajeToast = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Inicializo el sdk de Facebook
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        // Activo la app con Facebook
+        AppEventsLogger.activateApp(getApplication());
+
         setContentView(R.layout.activity_inicio);
 
         // Obtengo la instancia de la autentificación de firebase
         auth = FirebaseAuth.getInstance();
+
+        // Inicializa CallbackManager de Facebook
+        callbackManager = CallbackManager.Factory.create();
+
+        // Obtengo el componente de Login With Facebook de la interfaz
+        loginButton = findViewById(R.id.facebook_login_button);
+        // Establezco los permisos que necesitamos para acceder al Facebook
+        loginButton.setPermissions("email", "public_profile");
+
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                tokenAccesoFacebook(loginResult.getAccessToken());
+            }
+
+            @Override
+            public void onCancel() {
+                showToast("Inicio de sesión cancelado");
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                Log.e("Inicio", "Error en el inicio de sesión con Facebook", error);
+            }
+        });
+
 
         // Obtengo el elemento del botón de iniciar sesión con Google
         signInButton = findViewById(R.id.sign_in_button);
@@ -100,6 +147,67 @@ public class Inicio extends AppCompatActivity {
         );
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void tokenAccesoFacebook(AccessToken token) {
+        // Obtengo la credencial con la que voy a iniciar sesión en Firebase
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+
+        // Intento autenticar al usuario con Firebase y Facebook
+        auth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Si todo fue exitoso
+                            FirebaseUser user = auth.getCurrentUser();
+
+                            // Solicito los detalles del perfil de Facebook usando la API de Graph
+                            GraphRequest request = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+                                @Override
+                                public void onCompleted(JSONObject object, GraphResponse response) {
+                                    if (response.getError() == null) {
+                                        try {
+                                            String facebookUserId = object.getString("id");
+                                            String photoUrl = null;
+                                            if (object.has("picture")) {
+                                                JSONObject pictureData = object.getJSONObject("picture").getJSONObject("data");
+                                                photoUrl = pictureData.getString("url");
+                                            }
+
+                                            Intent intent = new Intent(Inicio.this, MainActivity.class);
+                                            intent.putExtra("name", user.getDisplayName());
+                                            intent.putExtra("photoUrl", photoUrl);
+                                            intent.putExtra("message", "Conectado por Facebook");
+                                            startActivity(intent);
+                                            finish();
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                            showToast("Error al obtener la foto de perfil.");
+                                        }
+                                    } else {
+                                        showToast("Error en la solicitud de perfil de Facebook.");
+                                    }
+                                }
+                            });
+
+                            Bundle parameters = new Bundle();
+                            parameters.putString("fields", "id,name,picture.type(large)");
+                            request.setParameters(parameters);
+                            request.executeAsync();
+                        } else {
+                            Log.w("Inicio", "signInWithCredential:failure", task.getException());
+                            showToast("Autenticación fallida "+task.getException());
+                        }
+                    }
+                });
+    }
+
+
     /**
      * Método en el que lo que consigo es pedir a Google que inicie el flujo de inicio de sesión
      * con Google para poder manejar la salida*/
@@ -135,6 +243,8 @@ public class Inicio extends AppCompatActivity {
                             intent.putExtra("email", user.getEmail());
                             // Establezco como parceable la key y el valor de la url de la foto de usuario de la cuenta que inicio
                             intent.putExtra("photoUrl", user.getPhotoUrl().toString());
+                            // Establezco como parceable la key y el valor del mensaje para saber si está resgitrado con Google o Facebook
+                            intent.putExtra("message", "Conectado por Google");
                             // Iniciamos la actividad ya con el objeto parceable introducido y todo
                             startActivity(intent);
                             // Finalizamos la actividad actual
@@ -158,20 +268,79 @@ public class Inicio extends AppCompatActivity {
 
         // Obtengo el usuario autenticado del dispotivo
         FirebaseUser currentUser = auth.getCurrentUser();
+        // Creo una variable para más adelante cargar el id del proveedor
+        String providerId = null;
+        String photoUrl = null;
+
         // Compruebo que se obtiene algo
-        if (currentUser != null) { // Si se obtiene algo
-            // Pasamos directamente con un intent a la pantalla del MainActivity para no tener que iniciar otra vez
+        if (currentUser != null) {
+            // Obtengo los datos de los proveedores
+            for (UserInfo userInfo : currentUser.getProviderData()) {
+                // Guardo en la variable creada el id del proveedor
+                providerId = userInfo.getProviderId();
+            }
+
+            // Creo el Intent
             Intent intent = new Intent(Inicio.this, MainActivity.class);
-            // Establezco como parceable la key y el valor del nombre de usuario de la cuenta que inicio
+            // Establezco como dato el nombre del usuario que ha iniciado sesión
             intent.putExtra("name", currentUser.getDisplayName());
-            // Establezco como parceable la key y el valor del email del usuario que inicio
-            intent.putExtra("email", currentUser.getEmail());
-            // Establezco como parceable la key y la url de la foto de perfil del usuario que inicio
-            intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
-            // Lanzamos la actividad
-            startActivity(intent);
-            // Finalizamos la actual
-            finish();
+
+            // Compruebo desde que proveedor he iniciado sesión
+            if (providerId.equalsIgnoreCase("google.com")) { // En caso de ser desde google
+                intent.putExtra("email", currentUser.getEmail()); // Establezco el email
+                // Establezco como dato la url del usuario que ha iniciado sesión
+                intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
+                intent.putExtra("message", "Conectado por Google"); // Establezco el mensaje de conectado con
+
+                // Inicio la actividad
+                startActivity(intent);
+                // Finalizo la actividad actual
+                finish();
+            } else if (providerId.equalsIgnoreCase("facebook.com")) { // En caso de ser desde facebook
+                AccessToken accessToken = AccessToken.getCurrentAccessToken();
+                if (accessToken != null && !accessToken.isExpired()) {
+                    // Solicitar los detalles del perfil de Facebook usando la API de Graph
+                    GraphRequest request = GraphRequest.newMeRequest(accessToken, new GraphRequest.GraphJSONObjectCallback() {
+                        @Override
+                        public void onCompleted(JSONObject object, GraphResponse response) {
+                            if (response.getError() == null) {
+                                try {
+                                    // Obtener la foto de perfil de Facebook
+                                    String photoUrl = null;
+                                    if (object.has("picture")) {
+                                        JSONObject pictureData = object.getJSONObject("picture").getJSONObject("data");
+                                        photoUrl = pictureData.getString("url");
+                                    }
+
+                                    // Establezco la foto de perfil si se obtiene correctamente
+                                    intent.putExtra("photoUrl", photoUrl);
+                                    intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con
+
+                                    // Inicio la actividad
+                                    startActivity(intent);
+                                    // Finalizo la actividad actual
+                                    finish();
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                    showToast("Error al obtener la foto de perfil.");
+                                }
+                            } else {
+                                showToast("Error en la solicitud de perfil de Facebook.");
+                            }
+                        }
+                    });
+
+                    // Solicitar los datos del perfil (id, nombre y foto)
+                    Bundle parameters = new Bundle();
+                    parameters.putString("fields", "id,name,picture.type(large)");
+                    request.setParameters(parameters);
+                    request.executeAsync();
+                }
+            } else { // En caso de ser desde otro
+                intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+                startActivity(intent);
+                finish(); // Finalizo la actividad
+            }
         }
     }
 
@@ -194,6 +363,24 @@ public class Inicio extends AppCompatActivity {
                 // Y termino con el bucle
                 break;
             }
+        }
+    }
+
+    /**
+     * @param mensaje
+     * Método para ir matando los Toast y mostrar todos en el mismo para evitar
+     * colas de Toasts y que se ralentice el dispositivo*/
+    public void showToast(String mensaje){
+        if (this != null){
+            // Comprobamos si existe algun toast cargado en el toast de la variable global
+            if (mensajeToast != null) { // En caso de que si que exista
+                mensajeToast.cancel(); // Le cancelamos, es decir le "matamos"
+            }
+
+            // Creamos un nuevo Toast con el mensaje que nos dan de argumento en el método
+            mensajeToast = Toast.makeText(this, mensaje, Toast.LENGTH_SHORT);
+            // Mostramos dicho Toast
+            mensajeToast.show();
         }
     }
 }

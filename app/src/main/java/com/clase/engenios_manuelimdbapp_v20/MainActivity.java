@@ -9,7 +9,9 @@ import android.view.Menu;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.snackbar.Snackbar;
@@ -46,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView infoNombre = null; // Variables para manejar el textview del nombre del usuario
     private ImageView infoUrlFoto = null; // Variable para manejar la imageview de la foto de perfil del usuario
     private String email = null; // Variable para manejar el email que obtenemos del anterior Intent
+    private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
+    private String message = null; // Variable para almacenar el mensaje que recibo del otro Intent y así inicio sesión y cierro
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,14 +63,28 @@ public class MainActivity extends AppCompatActivity {
         // Cargo en la variable que he creado el email del usuario y en caso de que no exista ningun registro ponemos el valor de nada
         correo = sharedPreferences.getString("emailUsuario", "nada");
 
-        // Creo un intent que lo que hace es obtener lo que le enviamos desde el login (siempre ha de recibir algo)
+        // Obtengo el Intent a traves del cual he accedido a esta Actividad
         Intent intent = getIntent();
-        // Creamos una variable de tipo nombre donde cargamos el nombre del usuario
-        nombre = intent.getStringExtra("name");
-        // Creamos una variable de tipo email donde cargamos el email del usuario
-        email = intent.getStringExtra("email");
-        // Creamos una variable de tipo url de la foto de perfil donde cargamos la url del usuario
-        imagenUrl = intent.getStringExtra("photoUrl");
+        // Obtengo el mensaje del Intent
+        message = intent.getStringExtra("message");
+        if (message != null) { // Compruebo que el mensaje no sea nulo
+            if (message.equals("Conectado por Facebook")) { // En caso de que sea Facebook
+                // Proceso los datos de Facebook
+                nombre = intent.getStringExtra("name");
+                imagenUrl = intent.getStringExtra("photoUrl");
+            } else if (message.equals("Conectado por Google")) { // En caso de que sea Google
+                // Proceso los datos de Google
+                nombre = intent.getStringExtra("name");
+                email = intent.getStringExtra("email");
+                imagenUrl = intent.getStringExtra("photoUrl");
+            } else { // En caso de que sea otro método de inicio de sesión
+                // Lanzo un toast diciendo que ese método de inicio de sesión no está activado
+                showToast("Ese método de sesión no está activado");
+            }
+        } else { // De ser nulo
+            // Lanzo un Toast avisando al usuario del lo ocurrido
+            showToast("No se recibió información de inicio de sesión");
+        }
 
         // Compruebo la variable y lo que tengo guardo en el sharedPreferences
         if(correo.equals("nada")){ // En caso de que el correo sea igual a nada
@@ -110,8 +128,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Establezco al TextView del nombre de usuario el valor del nombre
         infoNombre.setText(nombre);
-        // Establezco al TextView del email de usuario el valor del email
-        infoCorreo.setText(email);
+
+        // Compruebo el mensaje que recibo
+        if(message.equals("Conectado por Facebook")){ // En caso de ser Conectado por Facebook
+            // Muestro el mensaje en donde veriamos el correo
+            infoCorreo.setText(message);
+        }else{ // En caso de ser otro valor
+            // Establezco al TextView del email de usuario el valor del email
+            infoCorreo.setText(email);
+        }
 
         // Comprobamos que dentro de la variable que contiene la url de la foto de perfil haya algo
         if (imagenUrl != null && !imagenUrl.isEmpty()) {
@@ -141,11 +166,21 @@ public class MainActivity extends AppCompatActivity {
      * la sesión y volvamos a la actividad de Login aunque volvamos a pulsar el botón de iniciar con Google,
      * que nos vuelva a dejar elegir la cuenta de Google con la que queremos iniciar sesión*/
     private void signOut() {
+        // Compruebo si el mensaje es que hemos conectado por facebook o por google
+        if (message.equals("Conectado por Facebook")) { // En caso de habernos conectado por Facebook
+            // Cerramos la sesión de Facebook
+            LoginManager.getInstance().logOut();
+            // Lanzamos un Toast diciendo que hemos cerrado la sesión de la cuenta de Facebook
+            showToast("Sesión cerrada con Facebook");
+        } else if (message.equals("Conectado por Google")) { // En caso de habernos conectado por Google
+            // Establecemos que el cliente del objeto de GoogleSingIn también cierre la sesión
+            GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+            // Lanzamos un Toast diciendo que hemos cerrado la sesión de la cuenta de Google
+            showToast("Sesión cerrada con Google");
+        }
+
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
         auth.signOut();
-
-        // Establecemos que el cliente del objeto de GoogleSingIn también cierre la sesión
-        GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
 
         // Creamos un nuevo Intent para redirigir el usuario a la actividad de Inicio
         Intent intent = new Intent(MainActivity.this, Inicio.class);
@@ -161,5 +196,23 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    /**
+     * @param mensaje
+     * Método para ir matando los Toast y mostrar todos en el mismo para evitar
+     * colas de Toasts y que se ralentice el dispositivo*/
+    public void showToast(String mensaje){
+        if (this != null){
+            // Comprobamos si existe algun toast cargado en el toast de la variable global
+            if (mensajeToast != null) { // En caso de que si que exista
+                mensajeToast.cancel(); // Le cancelamos, es decir le "matamos"
+            }
+
+            // Creamos un nuevo Toast con el mensaje que nos dan de argumento en el método
+            mensajeToast = Toast.makeText(this, mensaje, Toast.LENGTH_SHORT);
+            // Mostramos dicho Toast
+            mensajeToast.show();
+        }
     }
 }

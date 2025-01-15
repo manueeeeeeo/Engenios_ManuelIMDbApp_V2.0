@@ -54,4 +54,6 @@ dependencies {
     implementation ("com.squareup.picasso:picasso:2.8")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.facebook.android:facebook-login:15.0.1")
+    implementation ("com.facebook.android:facebook-android-sdk:12.3.0")
 }
