@@ -18,6 +18,7 @@ import com.clase.engenios_manuelimdbapp_v20.MovieDetailsActivity;
 import com.clase.engenios_manuelimdbapp_v20.R;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -55,6 +56,9 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
     public void onBindViewHolder(@NonNull FavoriteViewHolder holder, @SuppressLint("RecyclerView") int position) {
         // Creo un Objeto de tipo Movie para guardar el de la posición actual para ir cargando todos los elementos y darles funcionalidad
         Movie movie = favoriteMoviesList.get(position);
+
+        // Creo el obejto de tipo FavoriteSync y le inicializo pasandole el contexto
+        FavoriteSync favoriteSync = new FavoriteSync(context);
 
         // Obtengo las preferencias del usuario
         sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -100,6 +104,8 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
                 if (database.borrarFavorita(movie.getId(), uid)>0) {
                     // Lanzamos un toast al usuario avisando que se ha eliminado la pelicula
                     showToast("Película eliminada de favoritos");
+                    // Llamo al método para eliminar esa película de la bd de Firebase
+                    favoriteSync.borrarPeli(movie.getId());
                     // Removemos de la lista de peliculas la posición a la cual hemos hecho el on long click
                     favoriteMoviesList.remove(position);
                     // Notificamos que se ha quitado algo del adaptador del recycler

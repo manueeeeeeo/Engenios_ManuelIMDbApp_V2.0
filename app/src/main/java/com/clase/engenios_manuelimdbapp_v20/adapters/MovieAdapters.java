@@ -17,6 +17,7 @@ import com.clase.engenios_manuelimdbapp_v20.MovieDetailsActivity;
 import com.clase.engenios_manuelimdbapp_v20.R;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -55,6 +56,9 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
         // Obtengo la pelicula para ponerla en el adaptador
         Movie movie = movieList.get(position);
+
+        // Creo el obejto de tipo FavoriteSync y le inicializo pasandole el contexto
+        FavoriteSync favoriteSync = new FavoriteSync(context);
 
         // Obtengo las preferencias del usuario
         sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -126,6 +130,10 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
                         if (result != -1) { // En caso de que el resultado sea diferente de -1
                             // Lanzamos un toast al usuario indicando que hemos agregado la película a la lista de favoritos
                             showToast("Película " + movie.getTitle() + " agregada a favoritos");
+                            // Llamo al método de favoriteSync para agregar la película a la bd de firebase
+                            favoriteSync.agregarPeli(movieId, moviTit,
+                                    urlIm,
+                                    fechaPe, val, des);
                         } else { // En caso de que sea -1
                             // Lanzamos un toast avisando al usuario que ha ocurrido un error al insertar
                             showToast("Error al agregar la película a favoritos");
