@@ -1,17 +1,17 @@
 package com.clase.engenios_manuelimdbapp_v20.sync;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.clase.engenios_manuelimdbapp_v20.adapters.FavoriteAdapters;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
+import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +43,7 @@ public class FavoriteSync {
      * de datos subida en la nube, para en caso de iniciar en otro
      * dispositivo con nuestra cuenta de google o de facebook que se
      * nos carguen nuestrar favoritas*/
-    public void syncFavorites() {
+    public void syncFavorites(FavoriteAdapters adapter) {
         // Guardo en una variable la referencia en donde voy a tener que insertar la película
         CollectionReference moviesRef = db.collection("favorites") // obtengo la colección principal
                 .document(userId) // Obtengo el documento que voy a querer leer, que es el uid del usuario
@@ -64,7 +64,13 @@ public class FavoriteSync {
                         }
 
                         // Llamo al método en donde guardo las películas una a una pasandole la lista
-                        saveToLocal(moviesList);
+                        guardarEnLocal(moviesList);
+
+                        // Llamo al método para limpiar la bd local para que en caso de que haya alguna que no este en la nube se borre
+                        limpiarPelisLocales(moviesList);
+
+                        // Método para recargar las películas y avisarle al adaptador
+                        recargarFavoritas(adapter);
                     }
                 })
                 // En caso de que algo falle en la llamada a la bd
@@ -72,11 +78,60 @@ public class FavoriteSync {
     }
 
     /**
+     * @param moviesList
+     * Método para limpiar las películas locales, es decir, obtengo una lista
+     * de los ids de las películas que tengo en local, en caso de que alguna
+     * película por un motivo u otro, este en la bd local, pero no en la
+     * de la nube, la borramos para evitar errores*/
+    private void limpiarPelisLocales(List<Map<String, Object>> moviesList) {
+        // Creo una lista de tipo string donde cargaré los ids de las películas que tenemos en la nube
+        List<String> idsPeliculasNube = new ArrayList<>();
+        // Utilizo un foreach para recorrer todas las películas que me da la nube y voy guardado sus ids en la lista
+        for (Map<String, Object> movieData : moviesList) {
+            // Agrego el id a la lista de ids de las películas en la nube
+            idsPeliculasNube.add((String) movieData.get("id"));
+        }
+
+        // Creo una lista de tipo string en donde voy a cargar todos los ids de las películas favoritas que tengo en local
+        List<String> idsPeliculasLocal = localDb.obtenerIdsFavoritas(userId);
+
+        // Utilizo un foreach para recorrer la lista de ids de la bd local
+        for (String idLocal : idsPeliculasLocal) {
+            // En caso de que en la lista de películas en la nube no contega una película con el id que toca en el foreach de la local
+            if (!idsPeliculasNube.contains(idLocal)) {
+                // Borramos la película de la lista de favoritas de ese usuario
+                localDb.borrarFavorita(idLocal, userId);
+                // Utilizamos un log para mejorar y poder obtener errores e información extra
+                Log.d("FavoriteSync", "Película eliminada de la base local: " + idLocal);
+            }
+        }
+    }
+
+    /**
+     * @param adapter
+     * Método para recargar las películas favoritas y llamar
+     * al método del adaptador para actualizar la lista completa*/
+    private void recargarFavoritas(FavoriteAdapters adapter) {
+        // Obtengo todas las películas favoritas desde la base de datos local
+        List<Movie> updatedMovieList = localDb.obtenerTodasLasFavoritas(userId);
+
+        // Compruebo que el adaptador no sea nulo
+        if (adapter != null) { // En caso de que no sea nulo
+            // Paso al método de actualización la nueva lista de películas en local
+            adapter.updateMovies(updatedMovieList);
+        } else { // En caso de que sea nulo
+            Log.e("FavoriteSync", "El adaptador no es válido");
+        }
+    }
+
+    /**
      * Método para ir guardando la lista de películas
      * disponibles en la bd de la nube a la bd local de
      * sqlite, vamos obteniendo todos los datos de todas las películas
      * y vamos agregandolo a la bd local*/
-    private void saveToLocal(List<Map<String, Object>> moviesList) {
+    private void guardarEnLocal(List<Map<String, Object>> moviesList) {
+        // Creo una lista de tipo string en donde obtengo todos los ids de todas las películas guardadas en favoritas en la bd local
+        List<String> localMovieIds = localDb.obtenerIdsFavoritas(userId);
         // Utilizo un foreach para recorrer todos los objetos de la lista MAP
         for (Map<String, Object> movieData : moviesList) {
             String movieId = (String) movieData.get("id"); // Obtengo en una variable el id
@@ -85,6 +140,11 @@ public class FavoriteSync {
             String releaseDate = (String) movieData.get("releaseDate"); // Obtengo en una variable la fecha de publicación
             String rating = (String) movieData.get("rating"); // Obtengo en una variable la valoración
             String overview = (String) movieData.get("overview"); // Obtengo en una variable la descripción
+
+            if (localMovieIds.contains(movieId)) {
+                Log.d("FavoriteSync", "La película ya existe en la base de datos local: " + movieId);
+                continue; // Si ya existe, pasa a la siguiente película
+            }
 
             // Inserto en la bd local la película con todos los elementos basandonos también el uid del usuario
             long result = localDb.insertarFavorita(movieId, posterUrl, title, releaseDate, overview, rating, userId);
@@ -147,34 +207,6 @@ public class FavoriteSync {
                 .addOnSuccessListener(aVoid -> Log.d("FavoriteSync", "Película eliminada correctamente"))
                 // Establecemos lo que ocurrira en caso de que algo salga mal
                 .addOnFailureListener(e -> Log.e("FavoriteSync", "Error al eliminar película", e));
-    }
-
-    /**
-     * Método para */
-    public void listenToChanges(FavoriteChangeListener listener) {
-        CollectionReference moviesRef = db.collection("favorites")
-                .document(userId)
-                .collection("movies");
-
-        moviesRef.addSnapshotListener((queryDocumentSnapshots, e) -> {
-            if (e != null) {
-                Log.e("FavoriteSync", "Error al escuchar cambios", e);
-                return;
-            }
-
-            if (queryDocumentSnapshots != null) {
-                List<Map<String, Object>> moviesList = new ArrayList<>();
-                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                    moviesList.add(document.getData());
-                }
-
-                listener.onFavoritesChanged(moviesList);
-            }
-        });
-    }
-
-    public interface FavoriteChangeListener {
-        void onFavoritesChanged(List<Map<String, Object>> moviesList);
     }
 
     /**

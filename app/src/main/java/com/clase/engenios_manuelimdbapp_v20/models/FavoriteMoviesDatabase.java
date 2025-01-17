@@ -238,4 +238,30 @@ public class FavoriteMoviesDatabase extends SQLiteOpenHelper {
         // Devolvemos la variable booleana
         return existe;
     }
+
+    /**
+     * @return
+     * @param userId
+     * Método para obtener solo los ids de las películas favoritas
+     * del usuario que le pasamos el id*/
+    public List<String> obtenerIdsFavoritas(String userId) {
+        // Creamos una lista de tipo string y la inicializamos
+        List<String> ids = new ArrayList<>();
+        // Llamamos a la clase e inicializamos dandonos cuenta de que es la que nos va a permitir leer la base de datos local
+        SQLiteDatabase db = this.getReadableDatabase();
+        // Utilizamos un cursor para ejecutar una query para filtrar y obtener todos los id de películas de un usuario en particular
+        Cursor cursor = db.rawQuery("SELECT " + COLUMN_MOVIE_ID + " FROM " + TABLE_NAME + " WHERE " + COLUMN_EMAIL_USER + " = ?", new String[]{userId});
+        // Comprobamos que el cursor no sea nulo
+        if (cursor != null) { // En caso de no ser nulo
+            // Utilizamos un bucle while para irnos moviendo por el curosr
+            while (cursor.moveToNext()) {
+                // Y vamos agregando el id de la película a la lista
+                ids.add(cursor.getString(0));
+            }
+            // Una vez hayamos finalizado con el cursor, le cerramos
+            cursor.close();
+        }
+        // Retornamos la lista de ids
+        return ids;
+    }
 }

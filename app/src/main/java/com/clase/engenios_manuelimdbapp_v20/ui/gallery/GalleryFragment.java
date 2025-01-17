@@ -28,11 +28,15 @@ import com.clase.engenios_manuelimdbapp_v20.adapters.FavoriteAdapters;
 import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentGalleryBinding;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Manuel
@@ -48,6 +52,7 @@ public class GalleryFragment extends Fragment {
     private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario en la app
     private String email = null; // Variable donde guardo el correo con el que esta la sesión iniciada
     private String uid = null; // Variable donde guardo el uid con el que está la sesión iniciada
+    private FavoriteSync favoriteSync = null; // Variable para manejar la sincronización de las películas en la nube y en local
 
     // Launcher para manejar la solicitud de permisos de Bluetooth
     private ActivityResultLauncher<String[]> solicitudMultiplesPermisos =
@@ -101,6 +106,11 @@ public class GalleryFragment extends Fragment {
         FavoriteAdapters adapter = new FavoriteAdapters(getContext(), favoriteMoviesList);
         // Establecemos ese adaptador al recycler
         recy.setAdapter(adapter);
+
+        // Inicializo la clase pasandole el contexto
+        favoriteSync = new FavoriteSync(getContext());
+        // Llamo al método para sincronizar la bd local con la de la nube
+        favoriteSync.syncFavorites(adapter);
 
         // Obtengo de la interfaz el botón de compartir la lista de favoritas
         botonCompartir = (Button) binding.btnCompartirFavs;
