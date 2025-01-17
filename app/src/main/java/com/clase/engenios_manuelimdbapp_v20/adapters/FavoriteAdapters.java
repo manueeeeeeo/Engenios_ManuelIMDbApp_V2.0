@@ -142,6 +142,20 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
     }
 
     /**
+     * @param newMovieList
+     * Método para actualizar las peliculas, primero que todo limpio la lista
+     * de películas, por otro lado, agrego todas las películas que le paso como parametro
+     * a la lista y por último notifico al adaptador los cambios*/
+    public void updateMovies(List<Movie> newMovieList) {
+        // Limpio la lista de las películas favoritas
+        this.favoriteMoviesList.clear();
+        // Agrego todas las que le paso por parametro
+        this.favoriteMoviesList.addAll(newMovieList);
+        // Notifico al adaptador los cambios realizados
+        notifyDataSetChanged();
+    }
+
+    /**
      * @param mensaje
      * Método para ir matando los Toast y mostrar todos en el mismo para evitar
      * colas de Toasts y que se ralentice el dispositivo*/
