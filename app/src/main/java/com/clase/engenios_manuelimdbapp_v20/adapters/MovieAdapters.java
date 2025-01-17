@@ -74,6 +74,8 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
                 .load(movie.getPosterPath()) // La url de la imagen de la portada
                 .placeholder(R.drawable.baseline_autorenew_24) // El placeholder de la foto
                 .error(R.drawable.icono_error) // Foto si tenemos un error
+                .resize(400, 600) // Reajusto las dimensiones de la foto, porque algunas son muy grandes
+                .centerCrop() // Establezco que se recorte pero se mantengan las proporciones
                 .into(holder.movieImageView); // El elemento donde vamos a cargar la foto de portada
 
         // Evento cuando clicko en la portada de la pelicula
