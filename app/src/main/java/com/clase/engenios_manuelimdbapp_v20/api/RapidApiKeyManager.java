@@ -17,6 +17,7 @@ public class RapidApiKeyManager {
         apiKeys.add("45157d396bmshf14702227e85da3p1ff7a9jsna860971b474a");
         apiKeys.add("2f2412d974msh6d1124b73789023p1ca9dfjsn6e660867f17c");
         apiKeys.add("");
+        apiKeys.add("");
     }
 
     // Obtiene la clave API actual

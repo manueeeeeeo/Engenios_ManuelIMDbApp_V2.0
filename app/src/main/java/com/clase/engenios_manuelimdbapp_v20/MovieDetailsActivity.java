@@ -79,7 +79,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
                     .load(movie.getPosterPath()) // Establezco la url que voy a descargar ka imagen
                     .placeholder(R.drawable.baseline_autorenew_24) // Establezco el placeholder de la foto
                     .error(R.drawable.icono_error) // Foto si tenemos un error
-                    .resize(300, 720) // Reajusto las dimensiones de la foto, porque algunas son muy grandes
+                    .resize(400, 650) // Reajusto las dimensiones de la foto, porque algunas son muy grandes
                     .centerCrop() // Establezco que se recorte pero se mantengan las proporciones
                     .into(imagenPeli); // Establezco el item donde vamos a cargar la foto
             // Compruebo si el valor de la descripción es nula o no
