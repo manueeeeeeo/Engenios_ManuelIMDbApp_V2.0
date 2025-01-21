@@ -242,10 +242,14 @@ public class Inicio extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            FirebaseUser user = auth.getCurrentUser();
                             // Inicio de sesión exitoso
                             showToast("Inicio de sesión exitoso");
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
-                            intent.putExtra("email", email);
+                            intent.putExtra("uidUs", user.getUid());
+                            intent.putExtra("photoUrl", "");
+                            intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+                            intent.putExtra("email", user.getEmail()); // Establezco el email
                             startActivity(intent);
                             finish();
                         } else {
@@ -258,7 +262,12 @@ public class Inicio extends AppCompatActivity {
     }
 
     public void proseguir(){
+        FirebaseUser user = auth.getCurrentUser();
         Intent in = new Intent(Inicio.this, MainActivity.class);
+        in.putExtra("uidUs", user.getUid());
+        in.putExtra("photoUrl", "");
+        in.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+        in.putExtra("email", user.getEmail()); // Establezco el email
         startActivity(in);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
