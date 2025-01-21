@@ -98,7 +98,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
         // Utilizo el contentValues para para poder crear un objeto e insertarlo en la bd local
         ContentValues values = new ContentValues();
         // Establezco en la columna de último login el valor que obtengo del submétodo
-        values.put(COLUMN_LAST_LOGIN, getCurrentTimestamp());
+        values.put(COLUMN_LAST_LOGIN, obtenerTiempoActual());
         // Utilizo el método update de sqlite para actualizar el registro que en el uid tenga el valor del parametro
         db.update(TABLE_NAME, values, COLUMN_UID + " = ?", new String[]{uid});
         // Cierro la base de datos
@@ -118,7 +118,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
         // Utilizo el contentValues para para poder crear un objeto e insertarlo en la bd local
         ContentValues values = new ContentValues();
         // Establezco en la columna de último logout el valor que obtengo del submétodo
-        values.put(COLUMN_LAST_LOGOUT, getCurrentTimestamp());
+        values.put(COLUMN_LAST_LOGOUT, obtenerTiempoActual());
         // Utilizo el método update de sqlite para actualizar el registro que en el uid tenga el valor del parametro
         db.update(TABLE_NAME, values, COLUMN_UID + " = ?", new String[]{uid});
         // Cierro la base de datos
@@ -130,7 +130,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
      * Método en el que obtengo el tiempo actual, de la fecha
      * dia, mes, año y el tiempo de horas, minutos y segundos,
      * además devuelvo el valor de dicho string del momento actual*/
-    private String getCurrentTimestamp() {
+    private String obtenerTiempoActual() {
         // Formateo una fecha obtenida del momento y le doy el formato de dia, mes y año, junto con la hora, minutos y segundos
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
     }
@@ -140,7 +140,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
      * @param uid
      * Método para obtener todos los datos de un usuario
      * basandonos en su uid*/
-    public Cursor obtenerUsuarioPorEmail(String uid) {
+    public Cursor obtenerUsuarioPorUid(String uid) {
         // Creo el objeto de la bd local y lo incializo para así poder agregar y obtener cosas
         SQLiteDatabase db = this.getReadableDatabase();
         // Dvuelvo el cursor con toda la información del usuario buscado

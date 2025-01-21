@@ -4,6 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,6 +57,13 @@ public class Inicio extends AppCompatActivity {
     private CallbackManager callbackManager = null;
     private LoginButton loginButton = null;
     private Toast mensajeToast = null;
+    private Button btnIniciar = null;
+    private Button btnRegistrarse = null;
+    private ImageView imagenClave = null;
+    private EditText editCorreo = null;
+    private EditText editClave = null;
+    private String email = null;
+    private String clave = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +80,12 @@ public class Inicio extends AppCompatActivity {
 
         // Inicializa CallbackManager de Facebook
         callbackManager = CallbackManager.Factory.create();
+
+        editCorreo = (EditText) findViewById(R.id.editCorreo);
+        editClave = (EditText) findViewById(R.id.editClave);
+        imagenClave = (ImageView) findViewById(R.id.imagenVerClave);
+        btnIniciar = (Button) findViewById(R.id.btnIniciarCorreo);
+        btnRegistrarse = (Button) findViewById(R.id.btnRegistrarse);
 
         // Obtengo el componente de Login With Facebook de la interfaz
         loginButton = findViewById(R.id.facebook_login_button);
@@ -145,6 +161,83 @@ public class Inicio extends AppCompatActivity {
                     }
                 }
         );
+
+        btnRegistrarse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                email = (String) editCorreo.getText().toString();
+                clave = (String) editClave.getText().toString();
+                if(email.isEmpty()){
+                    showToast("El campo del email está vacío!!");
+                }else{
+                    if(clave.isEmpty()){
+                        showToast("El campo de la clave está vacío!!");
+                    }else{
+                        registrarseConCorreo(email, clave);
+                    }
+                }
+            }
+        });
+
+        btnIniciar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                email = (String) editCorreo.getText().toString();
+                clave = (String) editClave.getText().toString();
+                if(email.isEmpty()){
+                    showToast("El campo del email está vacío!!");
+                }else{
+                    if(clave.isEmpty()){
+                        showToast("El campo de la clave está vacío!!");
+                    }else{
+                        iniciarConCorreo(email, clave);
+                    }
+                }
+            }
+        });
+    }
+
+    public void registrarseConCorreo(String correo, String clave){
+        auth.createUserWithEmailAndPassword(correo, clave)
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            showToast("Registro exitoso");
+                            proseguir();
+                        } else {
+                            showToast("Error en el registro: " + task.getException().getMessage());
+                        }
+                    }
+                });
+    }
+
+    public void iniciarConCorreo(String correo, String clave){
+        auth.signInWithEmailAndPassword(email, clave)
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Inicio de sesión exitoso
+                            showToast("Inicio de sesión exitoso");
+                            Intent intent = new Intent(Inicio.this, MainActivity.class);
+                            intent.putExtra("email", email);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // Error al iniciar sesión
+                            String error = task.getException() != null ? task.getException().getMessage() : "Error desconocido";
+                            showToast("Error: " + error);
+                        }
+                    }
+                });
+    }
+
+    public void proseguir(){
+        Intent in = new Intent(Inicio.this, MainActivity.class);
+        startActivity(in);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        finish();
     }
 
     @Override
@@ -320,6 +413,7 @@ public class Inicio extends AppCompatActivity {
 
                                     // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
                                     intent.putExtra("uidUs", currentUser.getUid());
+                                    intent.putExtra("name", currentUser.getDisplayName());
                                     // Establezco la foto de perfil si se obtiene correctamente
                                     intent.putExtra("photoUrl", photoUrl);
                                     intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con
@@ -345,7 +439,10 @@ public class Inicio extends AppCompatActivity {
                     request.executeAsync();
                 }
             } else { // En caso de ser desde otro
+                intent.putExtra("uidUs", currentUser.getUid());
+                intent.putExtra("photoUrl", "");
                 intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+                intent.putExtra("email", currentUser.getEmail()); // Establezco el email
                 startActivity(intent);
                 finish(); // Finalizo la actividad
             }

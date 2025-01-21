@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -27,6 +28,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.clase.engenios_manuelimdbapp_v20.databinding.ActivityMainBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Manuel
@@ -51,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
     private String message = null; // Variable para almacenar el mensaje que recibo del otro Intent y así inicio sesión y cierro
     private String uid = null; // Variable para almacenar y manejar el uid del usuario con sesion iniciada
+    private List<Movie> movieList = new ArrayList<>(); // Lista compartida
+    private boolean datosActualizados = false; // Indicador de cambio de datos
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,11 +90,11 @@ public class MainActivity extends AppCompatActivity {
                 uid = intent.getStringExtra("uidUs");
             } else { // En caso de que sea otro método de inicio de sesión
                 // Lanzo un toast diciendo que ese método de inicio de sesión no está activado
-                showToast("Ese método de sesión no está activado");
+                email = intent.getStringExtra("email");
+                uid = intent.getStringExtra("uidUs");
+                nombre = "";
+                imagenUrl = "";
             }
-        } else { // De ser nulo
-            // Lanzo un Toast avisando al usuario del lo ocurrido
-            showToast("No se recibió información de inicio de sesión");
         }
 
         // Compruebo la variable y lo que tengo guardo en el sharedPreferences
@@ -156,11 +162,12 @@ public class MainActivity extends AppCompatActivity {
             infoCorreo.setText(message);
         }else{ // En caso de ser otro valor
             // Establezco al TextView del email de usuario el valor del email
-            infoCorreo.setText(email);
+            infoNombre.setText(email);
+            infoCorreo.setText(message);
         }
 
         // Comprobamos que dentro de la variable que contiene la url de la foto de perfil haya algo
-        if (imagenUrl != null && !imagenUrl.isEmpty()) {
+        if (imagenUrl != null || !imagenUrl.isEmpty() || !imagenUrl.equals("")) {
             // En caso afirmativo, procedo a cargar con la libreria Picasso la imagen
             Picasso.get().load(imagenUrl).into(infoUrlFoto);
         }
@@ -180,6 +187,16 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
+    }
+
+    // Método para obtener la lista de películas
+    public List<Movie> getMovieList() {
+        return movieList;
+    }
+
+    // Método para verificar si los datos han cambiado
+    public boolean isDatosActualizados() {
+        return datosActualizados;
     }
 
     /**
