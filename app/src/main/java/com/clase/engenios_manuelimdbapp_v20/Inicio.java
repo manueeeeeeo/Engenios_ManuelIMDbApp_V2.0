@@ -2,6 +2,8 @@ package com.clase.engenios_manuelimdbapp_v20;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -65,6 +67,8 @@ public class Inicio extends AppCompatActivity {
     private String email = null;
     private String clave = null;
 
+    private boolean seVeClave = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,6 +113,26 @@ public class Inicio extends AppCompatActivity {
             }
         });
 
+        imagenClave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Comprobamos la variable que declare antes para el manejo de si mostrar o no la clave
+                if (seVeClave) { // En caso de que sea true
+                    // Oculto la contraseña
+                    editClave.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                } else { // En caso de que sea false
+                    // Muestro la contraseña
+                    editClave.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                }
+
+                // Mantengo el cursor al final del texto
+                editClave.setSelection(editClave.getText().length());
+                editClave.requestFocus(); // Aseguro que el EditText mantenga el foco
+
+                // Alterno el estado de visibilidad
+                seVeClave = !seVeClave;
+            }
+        });
 
         // Obtengo el elemento del botón de iniciar sesión con Google
         signInButton = findViewById(R.id.sign_in_button);
