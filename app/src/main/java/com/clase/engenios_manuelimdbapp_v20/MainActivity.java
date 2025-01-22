@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private String uid = null; // Variable para almacenar y manejar el uid del usuario con sesion iniciada
     private List<Movie> movieList = new ArrayList<>(); // Lista compartida
     private boolean datosActualizados = false; // Indicador de cambio de datos
+    private DatabaseUsers userdb = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         correo = sharedPreferences.getString("emailUsuario", "nada");
         // Cargo en la variable que he creado el uid del usuario y en caso de que no exista ningun registro ponemos el valor de nada
         uIdUsuario = sharedPreferences.getString("uIdUsuario", "nada");
+
+        userdb = new DatabaseUsers(this);
 
         // Obtengo el Intent a traves del cual he accedido a esta Actividad
         Intent intent = getIntent();
@@ -243,6 +247,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
         auth.signOut();
+
+        userdb.actualizarLogout(uIdUsuario);
 
         // Creamos un nuevo Intent para redirigir el usuario a la actividad de Inicio
         Intent intent = new Intent(MainActivity.this, Inicio.class);

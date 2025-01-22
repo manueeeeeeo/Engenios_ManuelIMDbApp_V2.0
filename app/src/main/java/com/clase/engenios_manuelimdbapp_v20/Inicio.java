@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -66,6 +67,7 @@ public class Inicio extends AppCompatActivity {
     private EditText editClave = null;
     private String email = null;
     private String clave = null;
+    private DatabaseUsers userdb = null;
 
     private boolean seVeClave = false;
 
@@ -84,6 +86,8 @@ public class Inicio extends AppCompatActivity {
 
         // Inicializa CallbackManager de Facebook
         callbackManager = CallbackManager.Factory.create();
+
+        userdb = new DatabaseUsers(this);
 
         editCorreo = (EditText) findViewById(R.id.editCorreo);
         editClave = (EditText) findViewById(R.id.editClave);
@@ -242,6 +246,8 @@ public class Inicio extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             FirebaseUser user = auth.getCurrentUser();
+                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            userdb.actualizarLogin(user.getUid());
                             // Inicio de sesión exitoso
                             showToast("Inicio de sesión exitoso");
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
@@ -304,6 +310,9 @@ public class Inicio extends AppCompatActivity {
                                                 photoUrl = pictureData.getString("url");
                                             }
 
+                                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                                            userdb.actualizarLogin(user.getUid());
+
                                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                                             intent.putExtra("name", user.getDisplayName());
                                             intent.putExtra("photoUrl", photoUrl);
@@ -362,6 +371,8 @@ public class Inicio extends AppCompatActivity {
                         // Compruebo una vez la tarea realizada si ha salido bien o no
                         if (task.isSuccessful()) { // En caso de que la tarea salga bien
                             FirebaseUser user = auth.getCurrentUser();
+                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            userdb.actualizarLogin(user.getUid());
                             // Creo un intent para poder pasar al MainAcivity una vez iniciada la sesión
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                             // Establezco como parceable la key y el valor del nombre de usuario de la cuenta que inicio
@@ -408,6 +419,8 @@ public class Inicio extends AppCompatActivity {
                 // Guardo en la variable creada el id del proveedor
                 providerId = userInfo.getProviderId();
             }
+
+            userdb.actualizarLogin(currentUser.getUid());
 
             // Creo el Intent
             Intent intent = new Intent(Inicio.this, MainActivity.class);
