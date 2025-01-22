@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -187,6 +189,27 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
+    }
+
+    // Manejar eventos de clic en el menú
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId(); // Obtenemos el ID del elemento seleccionado
+
+        if (id == R.id.action_settings) {
+            // Acción para "Settings"
+            Toast.makeText(this, "Settings seleccionados", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        if (id == R.id.action_editUser) {
+            // Acción para "Edit User"
+            Intent intent = new Intent(MainActivity.this, EditarPerfil.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item); // Para manejar otros casos
     }
 
     // Método para obtener la lista de películas
