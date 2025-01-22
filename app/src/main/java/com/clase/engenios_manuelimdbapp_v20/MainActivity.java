@@ -156,7 +156,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Establezco al TextView del nombre de usuario el valor del nombre
-        infoNombre.setText(nombre);
+        if(!nombre.isEmpty() || !nombre.equals("")){
+            infoNombre.setText(nombre);
+        }
 
         // Compruebo el mensaje que recibo
         if(message.equals("Conectado por Facebook")){ // En caso de ser Conectado por Facebook
@@ -164,12 +166,11 @@ public class MainActivity extends AppCompatActivity {
             infoCorreo.setText(message);
         }else{ // En caso de ser otro valor
             // Establezco al TextView del email de usuario el valor del email
-            //infoNombre.setText(email);
             infoCorreo.setText(email);
         }
 
         // Comprobamos que dentro de la variable que contiene la url de la foto de perfil haya algo
-        if (imagenUrl != null || !imagenUrl.isEmpty() || !imagenUrl.equals("")) {
+        if ((imagenUrl != null || !imagenUrl.isEmpty() || !imagenUrl.equals("")) && !message.equals("Conectado por otro método")) {
             // En caso afirmativo, procedo a cargar con la libreria Picasso la imagen
             Picasso.get().load(imagenUrl).into(infoUrlFoto);
         }

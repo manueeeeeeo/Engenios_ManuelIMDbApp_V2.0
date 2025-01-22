@@ -227,8 +227,7 @@ public class Inicio extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            showToast("Registro exitoso");
-                            proseguir();
+                            showToast("Registro exitoso, Inicie Sesión!!");
                         } else {
                             showToast("Error en el registro: " + task.getException().getMessage());
                         }
