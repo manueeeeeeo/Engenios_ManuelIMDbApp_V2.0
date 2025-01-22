@@ -237,7 +237,7 @@ public class Inicio extends AppCompatActivity {
     }
 
     public void iniciarConCorreo(String correo, String clave){
-        auth.signInWithEmailAndPassword(email, clave)
+        auth.signInWithEmailAndPassword(correo, clave)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {

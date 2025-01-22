@@ -162,8 +162,8 @@ public class MainActivity extends AppCompatActivity {
             infoCorreo.setText(message);
         }else{ // En caso de ser otro valor
             // Establezco al TextView del email de usuario el valor del email
-            infoNombre.setText(email);
-            infoCorreo.setText(message);
+            //infoNombre.setText(email);
+            infoCorreo.setText(email);
         }
 
         // Comprobamos que dentro de la variable que contiene la url de la foto de perfil haya algo
