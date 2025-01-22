@@ -2,8 +2,13 @@ package com.clase.engenios_manuelimdbapp_v20;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -54,6 +60,16 @@ public class Inicio extends AppCompatActivity {
     private CallbackManager callbackManager = null;
     private LoginButton loginButton = null;
     private Toast mensajeToast = null;
+    private Button btnIniciar = null;
+    private Button btnRegistrarse = null;
+    private ImageView imagenClave = null;
+    private EditText editCorreo = null;
+    private EditText editClave = null;
+    private String email = null;
+    private String clave = null;
+    private DatabaseUsers userdb = null;
+
+    private boolean seVeClave = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +86,14 @@ public class Inicio extends AppCompatActivity {
 
         // Inicializa CallbackManager de Facebook
         callbackManager = CallbackManager.Factory.create();
+
+        userdb = new DatabaseUsers(this);
+
+        editCorreo = (EditText) findViewById(R.id.editCorreo);
+        editClave = (EditText) findViewById(R.id.editClave);
+        imagenClave = (ImageView) findViewById(R.id.imagenVerClave);
+        btnIniciar = (Button) findViewById(R.id.btnIniciarCorreo);
+        btnRegistrarse = (Button) findViewById(R.id.btnRegistrarse);
 
         // Obtengo el componente de Login With Facebook de la interfaz
         loginButton = findViewById(R.id.facebook_login_button);
@@ -93,6 +117,26 @@ public class Inicio extends AppCompatActivity {
             }
         });
 
+        imagenClave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Comprobamos la variable que declare antes para el manejo de si mostrar o no la clave
+                if (seVeClave) { // En caso de que sea true
+                    // Oculto la contraseña
+                    editClave.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                } else { // En caso de que sea false
+                    // Muestro la contraseña
+                    editClave.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                }
+
+                // Mantengo el cursor al final del texto
+                editClave.setSelection(editClave.getText().length());
+                editClave.requestFocus(); // Aseguro que el EditText mantenga el foco
+
+                // Alterno el estado de visibilidad
+                seVeClave = !seVeClave;
+            }
+        });
 
         // Obtengo el elemento del botón de iniciar sesión con Google
         signInButton = findViewById(R.id.sign_in_button);
@@ -145,6 +189,94 @@ public class Inicio extends AppCompatActivity {
                     }
                 }
         );
+
+        btnRegistrarse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                email = (String) editCorreo.getText().toString();
+                clave = (String) editClave.getText().toString();
+                if(email.isEmpty()){
+                    showToast("El campo del email está vacío!!");
+                }else{
+                    if(clave.isEmpty()){
+                        showToast("El campo de la clave está vacío!!");
+                    }else{
+                        registrarseConCorreo(email, clave);
+                    }
+                }
+            }
+        });
+
+        btnIniciar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                email = (String) editCorreo.getText().toString();
+                clave = (String) editClave.getText().toString();
+                if(email.isEmpty()){
+                    showToast("El campo del email está vacío!!");
+                }else{
+                    if(clave.isEmpty()){
+                        showToast("El campo de la clave está vacío!!");
+                    }else{
+                        iniciarConCorreo(email, clave);
+                    }
+                }
+            }
+        });
+    }
+
+    public void registrarseConCorreo(String correo, String clave){
+        auth.createUserWithEmailAndPassword(correo, clave)
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            showToast("Registro exitoso, Inicie Sesión!!");
+                        } else {
+                            showToast("Error en el registro: " + task.getException().getMessage());
+                        }
+                    }
+                });
+    }
+
+    public void iniciarConCorreo(String correo, String clave){
+        auth.signInWithEmailAndPassword(correo, clave)
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = auth.getCurrentUser();
+                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            userdb.actualizarLogin(user.getUid());
+                            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                            // Inicio de sesión exitoso
+                            showToast("Inicio de sesión exitoso");
+                            Intent intent = new Intent(Inicio.this, MainActivity.class);
+                            intent.putExtra("uidUs", user.getUid());
+                            intent.putExtra("photoUrl", "");
+                            intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+                            intent.putExtra("email", user.getEmail()); // Establezco el email
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // Error al iniciar sesión
+                            String error = task.getException() != null ? task.getException().getMessage() : "Error desconocido";
+                            showToast("Error: " + error);
+                        }
+                    }
+                });
+    }
+
+    public void proseguir(){
+        FirebaseUser user = auth.getCurrentUser();
+        Intent in = new Intent(Inicio.this, MainActivity.class);
+        in.putExtra("uidUs", user.getUid());
+        in.putExtra("photoUrl", "");
+        in.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+        in.putExtra("email", user.getEmail()); // Establezco el email
+        startActivity(in);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        finish();
     }
 
     @Override
@@ -179,9 +311,15 @@ public class Inicio extends AppCompatActivity {
                                                 photoUrl = pictureData.getString("url");
                                             }
 
+                                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                                            userdb.actualizarLogin(user.getUid());
+                                            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+
                                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                                             intent.putExtra("name", user.getDisplayName());
                                             intent.putExtra("photoUrl", photoUrl);
+                                            // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                                            intent.putExtra("uidUs", user.getUid());
                                             intent.putExtra("message", "Conectado por Facebook");
                                             startActivity(intent);
                                             finish();
@@ -235,6 +373,9 @@ public class Inicio extends AppCompatActivity {
                         // Compruebo una vez la tarea realizada si ha salido bien o no
                         if (task.isSuccessful()) { // En caso de que la tarea salga bien
                             FirebaseUser user = auth.getCurrentUser();
+                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            userdb.actualizarLogin(user.getUid());
+                            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
                             // Creo un intent para poder pasar al MainAcivity una vez iniciada la sesión
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                             // Establezco como parceable la key y el valor del nombre de usuario de la cuenta que inicio
@@ -243,6 +384,8 @@ public class Inicio extends AppCompatActivity {
                             intent.putExtra("email", user.getEmail());
                             // Establezco como parceable la key y el valor de la url de la foto de usuario de la cuenta que inicio
                             intent.putExtra("photoUrl", user.getPhotoUrl().toString());
+                            // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                            intent.putExtra("uidUs", user.getUid());
                             // Establezco como parceable la key y el valor del mensaje para saber si está resgitrado con Google o Facebook
                             intent.putExtra("message", "Conectado por Google");
                             // Iniciamos la actividad ya con el objeto parceable introducido y todo
@@ -280,6 +423,9 @@ public class Inicio extends AppCompatActivity {
                 providerId = userInfo.getProviderId();
             }
 
+            userdb.actualizarLogin(currentUser.getUid());
+            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+
             // Creo el Intent
             Intent intent = new Intent(Inicio.this, MainActivity.class);
             // Establezco como dato el nombre del usuario que ha iniciado sesión
@@ -291,6 +437,8 @@ public class Inicio extends AppCompatActivity {
                 // Establezco como dato la url del usuario que ha iniciado sesión
                 intent.putExtra("photoUrl", currentUser.getPhotoUrl().toString());
                 intent.putExtra("message", "Conectado por Google"); // Establezco el mensaje de conectado con
+                // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                intent.putExtra("uidUs", currentUser.getUid());
 
                 // Inicio la actividad
                 startActivity(intent);
@@ -312,6 +460,9 @@ public class Inicio extends AppCompatActivity {
                                         photoUrl = pictureData.getString("url");
                                     }
 
+                                    // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                                    intent.putExtra("uidUs", currentUser.getUid());
+                                    intent.putExtra("name", currentUser.getDisplayName());
                                     // Establezco la foto de perfil si se obtiene correctamente
                                     intent.putExtra("photoUrl", photoUrl);
                                     intent.putExtra("message", "Conectado por Facebook"); // Establezco el mensaje de conectado con
@@ -337,7 +488,10 @@ public class Inicio extends AppCompatActivity {
                     request.executeAsync();
                 }
             } else { // En caso de ser desde otro
+                intent.putExtra("uidUs", currentUser.getUid());
+                intent.putExtra("photoUrl", "");
                 intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+                intent.putExtra("email", currentUser.getEmail()); // Establezco el email
                 startActivity(intent);
                 finish(); // Finalizo la actividad
             }

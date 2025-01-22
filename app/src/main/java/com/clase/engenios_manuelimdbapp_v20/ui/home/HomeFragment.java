@@ -95,6 +95,9 @@ public class HomeFragment extends Fragment {
 
                         IMDBApiClient.switchApiKey(); // Cambiamos a la siguiente clave
 
+                        // Obtengo en el string de key de la api la key de ese momento
+                        apiKey = IMDBApiClient.getApiKey();
+
                         // Reintentamos la solicitud con la nueva clave
                         Request retriedRequest = newRequest.newBuilder()
                                 .removeHeader("X-RapidAPI-Key")

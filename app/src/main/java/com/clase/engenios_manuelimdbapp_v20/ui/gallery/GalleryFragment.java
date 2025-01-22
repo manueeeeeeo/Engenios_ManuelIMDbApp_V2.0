@@ -28,11 +28,15 @@ import com.clase.engenios_manuelimdbapp_v20.adapters.FavoriteAdapters;
 import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentGalleryBinding;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Manuel
@@ -47,6 +51,8 @@ public class GalleryFragment extends Fragment {
     private BluetoothAdapter bluetoothAdapter; // Adaptador de Bluetooth
     private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario en la app
     private String email = null; // Variable donde guardo el correo con el que esta la sesión iniciada
+    private String uid = null; // Variable donde guardo el uid con el que está la sesión iniciada
+    private FavoriteSync favoriteSync = null; // Variable para manejar la sincronización de las películas en la nube y en local
 
     // Launcher para manejar la solicitud de permisos de Bluetooth
     private ActivityResultLauncher<String[]> solicitudMultiplesPermisos =
@@ -88,15 +94,23 @@ public class GalleryFragment extends Fragment {
         // Cargo en la variable creada el valor del email del usuario con la sesión abierta
         email = sharedPreferences.getString("emailUsuario", "nada");
 
+        // Cargo en la variable creada el valor del uid del usuario con la sesión abierta
+        uid = sharedPreferences.getString("uIdUsuario", "nada");
+
         // Creo un objeto de tipo FavoriteMoviesDatabase que me sirve para tener acceso a la Base de Datos SQLite
         FavoriteMoviesDatabase database = new FavoriteMoviesDatabase(getContext());
 
         // Creo una lista de película y la cargo gracias al método del objeto antes creado que me obtiene todas las películas favortias
-        List<Movie> favoriteMoviesList = database.obtenerTodasLasFavoritas(email);
+        List<Movie> favoriteMoviesList = database.obtenerTodasLasFavoritas(uid);
         // Inicializo un nuevo adaptador de tipo FavoriteAdapters pasandole el contexto y la lista de favoritas
         FavoriteAdapters adapter = new FavoriteAdapters(getContext(), favoriteMoviesList);
         // Establecemos ese adaptador al recycler
         recy.setAdapter(adapter);
+
+        // Inicializo la clase pasandole el contexto
+        favoriteSync = new FavoriteSync(getContext());
+        // Llamo al método para sincronizar la bd local con la de la nube
+        favoriteSync.syncFavorites(adapter);
 
         // Obtengo de la interfaz el botón de compartir la lista de favoritas
         botonCompartir = (Button) binding.btnCompartirFavs;

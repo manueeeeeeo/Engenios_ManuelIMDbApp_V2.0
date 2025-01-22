@@ -18,6 +18,7 @@ import com.clase.engenios_manuelimdbapp_v20.MovieDetailsActivity;
 import com.clase.engenios_manuelimdbapp_v20.R;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
     private Toast mensajeToast = null; // Toast para mostrar mensajes
     private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario
     private String email = null; // Variable donde guardare y cargare el correo del usuario con la seión iniciada
+    private String uid = null; // Varibel donde guardare y cargare el correo del usuario con la sesión iniciada
 
     /**
      * @param context
@@ -55,11 +57,17 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
         // Creo un Objeto de tipo Movie para guardar el de la posición actual para ir cargando todos los elementos y darles funcionalidad
         Movie movie = favoriteMoviesList.get(position);
 
+        // Creo el obejto de tipo FavoriteSync y le inicializo pasandole el contexto
+        FavoriteSync favoriteSync = new FavoriteSync(context);
+
         // Obtengo las preferencias del usuario
         sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
 
         // Cargo en la variable de email el email guardado en las preferencias
         email = sharedPreferences.getString("emailUsuario", "nada");
+
+        // Cargo en la variable el uid guardado en las preferencias
+        uid = sharedPreferences.getString("uIdUsuario", "nada");
 
         // Procedo a cargar la imagen de la portada con Picasso
         Picasso.get()
@@ -93,9 +101,11 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
                 FavoriteMoviesDatabase database = new FavoriteMoviesDatabase(context);
 
                 // En caso de que se pueda eliminar la pelicula basandonos en su Id de Pelicula y que este id seá mayor que 0
-                if (database.borrarFavorita(movie.getId(), email)>0) {
+                if (database.borrarFavorita(movie.getId(), uid)>0) {
                     // Lanzamos un toast al usuario avisando que se ha eliminado la pelicula
                     showToast("Película eliminada de favoritos");
+                    // Llamo al método para eliminar esa película de la bd de Firebase
+                    favoriteSync.borrarPeli(movie.getId());
                     // Removemos de la lista de peliculas la posición a la cual hemos hecho el on long click
                     favoriteMoviesList.remove(position);
                     // Notificamos que se ha quitado algo del adaptador del recycler
@@ -129,6 +139,20 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
             // Obtenemos el elemento de la interfaz para asemejarlo
             movieImageView = itemView.findViewById(R.id.movieImageView);
         }
+    }
+
+    /**
+     * @param newMovieList
+     * Método para actualizar las peliculas, primero que todo limpio la lista
+     * de películas, por otro lado, agrego todas las películas que le paso como parametro
+     * a la lista y por último notifico al adaptador los cambios*/
+    public void updateMovies(List<Movie> newMovieList) {
+        // Limpio la lista de las películas favoritas
+        this.favoriteMoviesList.clear();
+        // Agrego todas las que le paso por parametro
+        this.favoriteMoviesList.addAll(newMovieList);
+        // Notifico al adaptador los cambios realizados
+        notifyDataSetChanged();
     }
 
     /**

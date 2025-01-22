@@ -17,6 +17,7 @@ import com.clase.engenios_manuelimdbapp_v20.MovieDetailsActivity;
 import com.clase.engenios_manuelimdbapp_v20.R;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
     private Toast mensajeToast = null; // Toast para el manejo de los mensajes
     private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario
     private String email = null; // Variable donde cargaré y manejaré el email del usuario con la sesión inciada
+    private String uid = null; // Variable donde cargaré y manejaré el uid del usuario con la sesión iniciada
 
     /**
      * @param context
@@ -55,17 +57,25 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
         // Obtengo la pelicula para ponerla en el adaptador
         Movie movie = movieList.get(position);
 
+        // Creo el obejto de tipo FavoriteSync y le inicializo pasandole el contexto
+        FavoriteSync favoriteSync = new FavoriteSync(context);
+
         // Obtengo las preferencias del usuario
         sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
 
         // Cargo en la variable email el correo del usuario con la sesión inciada
         email = sharedPreferences.getString("emailUsuario", "nada");
 
+        // Cargo en la variable uid del usuario con la sesión iniciada
+        uid = sharedPreferences.getString("uIdUsuario", "nada");
+
         // Procedo a cargar la imagen de la portada con Picasso
         Picasso.get()
                 .load(movie.getPosterPath()) // La url de la imagen de la portada
                 .placeholder(R.drawable.baseline_autorenew_24) // El placeholder de la foto
                 .error(R.drawable.icono_error) // Foto si tenemos un error
+                .resize(400, 600) // Reajusto las dimensiones de la foto, porque algunas son muy grandes
+                .centerCrop() // Establezco que se recorte pero se mantengan las proporciones
                 .into(holder.movieImageView); // El elemento donde vamos a cargar la foto de portada
 
         // Evento cuando clicko en la portada de la pelicula
@@ -115,13 +125,17 @@ public class MovieAdapters extends RecyclerView.Adapter<MovieAdapters.MovieViewH
                     showToast("No podemos cargar todos los datos de la película, pruebe más tarde!!");
                 }else{ // En caso de que no sean nulos
                     // En caso de que la película todavia no esté insertada en la bd
-                    if (!database.existeEnLaBD(movieId, email)) {
+                    if (!database.existeEnLaBD(movieId, uid)) {
                         // Utilizo el método de insertar en la bd, pasandole los datos necesarios
-                        long result = database.insertarFavorita(movieId, urlIm, moviTit, fechaPe, des, val, email);
+                        long result = database.insertarFavorita(movieId, urlIm, moviTit, fechaPe, des, val, uid);
                         // Basandome en la respuesta del método anterior haremos una cosa u otra
                         if (result != -1) { // En caso de que el resultado sea diferente de -1
                             // Lanzamos un toast al usuario indicando que hemos agregado la película a la lista de favoritos
                             showToast("Película " + movie.getTitle() + " agregada a favoritos");
+                            // Llamo al método de favoriteSync para agregar la película a la bd de firebase
+                            favoriteSync.agregarPeli(movieId, moviTit,
+                                    urlIm,
+                                    fechaPe, val, des);
                         } else { // En caso de que sea -1
                             // Lanzamos un toast avisando al usuario que ha ocurrido un error al insertar
                             showToast("Error al agregar la película a favoritos");
