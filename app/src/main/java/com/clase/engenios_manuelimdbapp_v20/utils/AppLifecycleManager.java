@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.google.firebase.auth.FirebaseAuth;
@@ -22,6 +23,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
     private static final long LOGOUT_DELAY = 30000; // Ejemplo: 30 segundos
     private SharedPreferences preferences;
     private DatabaseUsers databaseUsers;
+    private Toast mensajeToast = null;
 
     @Override
     public void onCreate() {
@@ -41,6 +43,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
         String uid = obtenerUidActual();
         if (uid != null) {
             databaseUsers.actualizarLogout(uid); // Registrar logout en la base de datos
+            showToast("Logout Actualizado: "+databaseUsers.obtenerTiempoActual());
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("is_logged_in", false);
             editor.apply();
@@ -52,6 +55,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
         String uid = obtenerUidActual();
         if (uid != null) {
             databaseUsers.actualizarLogin(uid); // Registrar login en la base de datos
+            showToast("Login Actualizado: "+databaseUsers.obtenerTiempoActual());
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("is_logged_in", true);
             editor.apply();
@@ -119,5 +123,23 @@ public class AppLifecycleManager extends Application implements Application.Acti
     @Override
     public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
         // Implementación vacía
+    }
+
+    /**
+     * @param mensaje
+     * Método para ir matando los Toast y mostrar todos en el mismo para evitar
+     * colas de Toasts y que se ralentice el dispositivo*/
+    public void showToast(String mensaje){
+        if (this != null){
+            // Comprobamos si existe algun toast cargado en el toast de la variable global
+            if (mensajeToast != null) { // En caso de que si que exista
+                mensajeToast.cancel(); // Le cancelamos, es decir le "matamos"
+            }
+
+            // Creamos un nuevo Toast con el mensaje que nos dan de argumento en el método
+            mensajeToast = Toast.makeText(this, mensaje, Toast.LENGTH_SHORT);
+            // Mostramos dicho Toast
+            mensajeToast.show();
+        }
     }
 }

@@ -130,7 +130,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
      * Método en el que obtengo el tiempo actual, de la fecha
      * dia, mes, año y el tiempo de horas, minutos y segundos,
      * además devuelvo el valor de dicho string del momento actual*/
-    private String obtenerTiempoActual() {
+    public String obtenerTiempoActual() {
         // Formateo una fecha obtenida del momento y le doy el formato de dia, mes y año, junto con la hora, minutos y segundos
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
     }

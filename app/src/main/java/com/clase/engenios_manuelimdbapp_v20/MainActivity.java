@@ -249,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
         auth.signOut();
 
         userdb.actualizarLogout(uIdUsuario);
+        showToast("Logout Actualizado: "+userdb.obtenerTiempoActual());
 
         // Creamos un nuevo Intent para redirigir el usuario a la actividad de Inicio
         Intent intent = new Intent(MainActivity.this, Inicio.class);
