@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -24,6 +25,9 @@ public class AppLifecycleManager extends Application implements Application.Acti
     private SharedPreferences preferences;
     private DatabaseUsers databaseUsers;
     private Toast mensajeToast = null;
+    private UsersSync sincronizacionUsuarios = null;
+
+    private boolean isExplicitLogout = false; // Indicador para logout explícito
 
     @Override
     public void onCreate() {
@@ -32,6 +36,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
 
         preferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE);
         databaseUsers = new DatabaseUsers(this); // Inicializar base de datos
+        sincronizacionUsuarios = new UsersSync();
         logoutHandler = new Handler();
         logoutRunnable = () -> {
             // Acción de logout automático
@@ -44,6 +49,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
         if (uid != null) {
             databaseUsers.actualizarLogout(uid); // Registrar logout en la base de datos
             showToast("Logout Actualizado: "+databaseUsers.obtenerTiempoActual());
+            sincronizacionUsuarios.registrarLogout(uid);
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("is_logged_in", false);
             editor.apply();
@@ -52,10 +58,12 @@ public class AppLifecycleManager extends Application implements Application.Acti
     }
 
     private void registerUserLogin() {
+        isExplicitLogout = false;
         String uid = obtenerUidActual();
         if (uid != null) {
             databaseUsers.actualizarLogin(uid); // Registrar login en la base de datos
             showToast("Login Actualizado: "+databaseUsers.obtenerTiempoActual());
+            sincronizacionUsuarios.registrarLogin(uid);
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("is_logged_in", true);
             editor.apply();
@@ -92,11 +100,13 @@ public class AppLifecycleManager extends Application implements Application.Acti
 
     @Override
     public void onActivityStopped(Activity activity) {
-        if (!isActivityChangingConfigurations) {
-            activityReferences--;
-            if (activityReferences == 0) {
-                // Si no hay actividades activas, la app está cerrada
-                logoutHandler.postDelayed(logoutRunnable, LOGOUT_DELAY);
+        activityReferences--;
+        isActivityChangingConfigurations = activity.isChangingConfigurations();
+
+        if (activityReferences == 0 && !isActivityChangingConfigurations) {
+            if (!isExplicitLogout) {
+                Log.d("AppLifecycleManager", "App en segundo plano, registrando logout implícito.");
+                registerUserLogout(); // Logout implícito
             }
         }
     }
@@ -113,6 +123,11 @@ public class AppLifecycleManager extends Application implements Application.Acti
             registerUserLogout();
         }
         super.onTrimMemory(level);
+    }
+
+    public void onExplicitLogout() {
+        isExplicitLogout = true;
+        registerUserLogout(); // Logout explícito
     }
 
     @Override
