@@ -22,6 +22,7 @@ public class UsersSync {
         Map<String, Object> userData = new HashMap<>();
         userData.put("displayName", name);
         userData.put("email", email);
+        userData.put("user_uid", uid);
         usersCollection.document(uid).set(userData)
                 .addOnSuccessListener(aVoid -> {
                     // Log exitoso
