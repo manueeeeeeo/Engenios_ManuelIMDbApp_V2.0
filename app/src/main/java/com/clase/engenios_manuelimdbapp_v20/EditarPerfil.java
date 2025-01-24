@@ -25,6 +25,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.hbb20.CountryCodePicker;
+
 public class EditarPerfil extends AppCompatActivity {
     private EditText editCorreo = null;
     private EditText editNombre = null;
@@ -33,9 +35,12 @@ public class EditarPerfil extends AppCompatActivity {
     private Button btnGuardar = null;
     private Button btnElegirImagen = null;
     private Button btnElegirUbicacion = null;
-    private Spinner spinnerNumero = null;
+    private CountryCodePicker ccp = null;
     private SharedPreferences sharedPreferences = null;
     private ImageView imagenFotoPerfil = null;
+
+    private String prefijo = null;
+    private String pais = null;
 
     private static final int PERMISSION_REQUEST_CODE = 100;
 
@@ -77,6 +82,8 @@ public class EditarPerfil extends AppCompatActivity {
         btnElegirUbicacion = (Button) findViewById(R.id.btnUbi);
         btnElegirImagen = (Button) findViewById(R.id.btnElegirIMG);
         imagenFotoPerfil = (ImageView) findViewById(R.id.imgPerfil);
+        ccp = (CountryCodePicker) findViewById(R.id.prefijoNumero);
+        editTele = (EditText) findViewById(R.id.editTelefono);
 
         btnElegirImagen.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,6 +98,29 @@ public class EditarPerfil extends AppCompatActivity {
                     showImagePickerDialog();
                 }
             }
+        });
+
+        btnGuardar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+
+        btnElegirUbicacion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+
+        ccp.setOnCountryChangeListener(() -> {
+            pais = ccp.getSelectedCountryName();
+            prefijo = ccp.getSelectedCountryCodeWithPlus();
+
+            Toast.makeText(EditarPerfil.this,
+                    "País: " + pais + "\nCódigo: " + "\nTel: " + prefijo,
+                    Toast.LENGTH_LONG).show();
         });
     }
 
