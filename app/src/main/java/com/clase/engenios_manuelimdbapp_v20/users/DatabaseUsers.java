@@ -20,6 +20,9 @@ public class DatabaseUsers extends SQLiteOpenHelper {
     private static final String COLUMN_UID = "uid";// Establezco el nombre de la columna del uid del usuario
     private static final String COLUMN_NAME = "displayName"; // Establezco el nombre de la columna del nombre del usuario
     private static final String COLUMN_EMAIL = "email"; // Establezco el nombre de la columna del email del ususario
+    private static final String COLUMN_UBICACION = "ubi"; // Establezco el nombre de la columna de la ubicación del usuario
+    private static final String COLUMN_NUMERO = "number"; // Establezco el nombre de la columna del correo del usuario
+    private static final String COLUMN_IMAGEN_PERFIL = "imagen"; // Establezco el nombre de la columna de la imagen de perfil del usuario
     private static final String COLUMN_LAST_LOGIN = "last_login"; // Establezco el nombre de la columna del último login
     private static final String COLUMN_LAST_LOGOUT = "last_logout"; // Establezco el nombre de la columna del último logout
 
@@ -45,6 +48,9 @@ public class DatabaseUsers extends SQLiteOpenHelper {
                 + COLUMN_UID + " TEXT NOT NULL UNIQUE, " // Genero la columna del uid
                 + COLUMN_NAME + " TEXT NOT NULL, " // Genero la columna del nombre
                 + COLUMN_EMAIL + " TEXT NOT NULL UNIQUE, " // Genero la columna del email
+                + COLUMN_UBICACION + " TEXT, " // Genero la columna de la ubicacion
+                + COLUMN_NUMERO + " TEXT, " // Genero la columna del número
+                +COLUMN_IMAGEN_PERFIL + " TEXT, " // Genero la columna de la imagen de perfil
                 + COLUMN_LAST_LOGIN + " TEXT, " // Genero la columna del último login
                 + COLUMN_LAST_LOGOUT + " TEXT)"; // Genero la columna del último logout
         db.execSQL(CREATE_TABLE); // Ejecuto la sentencia y creo la tabla
@@ -145,5 +151,52 @@ public class DatabaseUsers extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         // Dvuelvo el cursor con toda la información del usuario buscado
         return db.query(TABLE_NAME, null, COLUMN_UID + " = ?", new String[]{uid}, null, null, null);
+    }
+
+    /**
+     * @param uid
+     * @param numero
+     * @param ubicacion
+     * Método en el que le paso como parametros el uid, la ubicación
+     * y el número de telefono del usuario y el nombre para asegurarnos
+     * de actualizar los datos del mismo*/
+    private void actualizarUsuario(String uid, String ubicacion, String numero, String nombre, boolean cambiarNombre){
+        // Creo el objeto de la bd local y lo incializo para así poder agregar cosas
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Utilizo el contentValues para para poder crear un objeto e insertarlo en la bd local
+        ContentValues values = new ContentValues();
+        // Asigno los valores a la columna para la actualización
+        values.put(DatabaseUsers.COLUMN_UBICACION, ubicacion);
+        // Asigno los valores a la columna para la actualización
+        values.put(DatabaseUsers.COLUMN_NUMERO, numero);
+        // Compruebo si he de actualizar el nombre también
+        if(cambiarNombre == true){ // De ser así
+            // Guardo y asigno el nuevo valor del nombre en el contet values
+            values.put(DatabaseUsers.COLUMN_NAME, nombre);
+        }
+        // Realiza la actualización de las dos columnas del usuario
+        db.update(DatabaseUsers.TABLE_NAME, values, DatabaseUsers.COLUMN_UID + "=?", new String[]{uid});
+        // Cierro la base de datos
+        db.close();
+    }
+
+    /**
+     * @param uid
+     * @param imagenBase64
+     * Método en el que le paso como parametros una imagen pasada
+     * a base 64 para convertirla en texto y el uid del usuario y
+     * lo que hago es insertar está imagen en texto en la columan de la
+     * foto de perfil del usuario con ese uid registrado*/
+    public void guardarImagenEnBaseDeDatos(String imagenBase64, String uid) {
+        // Creo el objeto de la bd local y lo incializo para así poder agregar cosas
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Utilizo el contentValues para para poder crear un objeto e insertarlo en la bd local
+        ContentValues values = new ContentValues();
+        // Asigno los valores a la columna para la actualización
+        values.put(DatabaseUsers.COLUMN_IMAGEN_PERFIL, imagenBase64);
+        // Realiza la actualización de la imagen del usuario
+        db.update(DatabaseUsers.TABLE_NAME, values, DatabaseUsers.COLUMN_UID + "=?", new String[]{uid});
+        // Cierro la base de datos
+        db.close();
     }
 }
