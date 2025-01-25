@@ -160,7 +160,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
      * Método en el que le paso como parametros el uid, la ubicación
      * y el número de telefono del usuario y el nombre para asegurarnos
      * de actualizar los datos del mismo*/
-    private void actualizarUsuario(String uid, String ubicacion, String numero, String nombre, boolean cambiarNombre){
+    public void actualizarUsuario(String uid, String ubicacion, String numero, String nombre, boolean cambiarNombre){
         // Creo el objeto de la bd local y lo incializo para así poder agregar cosas
         SQLiteDatabase db = this.getWritableDatabase();
         // Utilizo el contentValues para para poder crear un objeto e insertarlo en la bd local
