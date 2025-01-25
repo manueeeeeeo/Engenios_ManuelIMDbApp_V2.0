@@ -171,6 +171,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.509" />
 
+    <ImageView
+        android:id="@+id/mapImageView"
+        android:layout_width="390dp"
+        android:layout_height="250dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.238"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.158" />
+
     <com.hbb20.CountryCodePicker
         android:id="@+id/prefijoNumero"
         android:layout_width="wrap_content"

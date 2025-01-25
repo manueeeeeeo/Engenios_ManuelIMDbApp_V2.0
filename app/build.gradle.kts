@@ -62,4 +62,5 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:18.1.0")
     implementation ("com.google.android.libraries.places:places:3.1.0")
     implementation ("com.google.android.gms:play-services-places:17.0.0")
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
 }
