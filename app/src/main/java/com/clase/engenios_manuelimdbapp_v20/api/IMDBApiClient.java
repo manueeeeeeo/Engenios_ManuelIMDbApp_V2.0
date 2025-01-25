@@ -12,22 +12,12 @@ public class IMDBApiClient {
     private static IMDBApiService apiService;
     private static RapidApiKeyManager rapidApiKeyManager = new RapidApiKeyManager();
 
-    public static IMDBApiService getApiService(){
-        if(apiService == null){
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-            apiService = retrofit.create(IMDBApiService.class);
-        }
-        return apiService;
-    }
-
     public static String getApiKey(){
         return rapidApiKeyManager.getCurrentKey();
     }
 
     public static void switchApiKey(){
         rapidApiKeyManager.switchToNextKey();
+        apiService = null;
     }
 }
