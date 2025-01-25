@@ -1,9 +1,12 @@
 package com.clase.engenios_manuelimdbapp_v20;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -49,6 +52,8 @@ import com.google.firebase.auth.UserInfo;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * @author Manuel
  * @version 1.0*/
@@ -70,6 +75,7 @@ public class Inicio extends AppCompatActivity {
     private String clave = null;
     private DatabaseUsers userdb = null;
     private UsersSync sincronizarUsers = null;
+    private SharedPreferences preferences = null;
 
     private boolean seVeClave = false;
 
@@ -92,6 +98,8 @@ public class Inicio extends AppCompatActivity {
         userdb = new DatabaseUsers(this);
 
         sincronizarUsers = new UsersSync();
+
+        preferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE);
 
         editCorreo = (EditText) findViewById(R.id.editCorreo);
         editClave = (EditText) findViewById(R.id.editClave);
@@ -250,11 +258,12 @@ public class Inicio extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             FirebaseUser user = auth.getCurrentUser();
-                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), cifrarBase64(user.getEmail()));
                             //userdb.actualizarLogin(user.getUid());
                             //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
                             sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
                             //sincronizarUsers.registrarLogin(user.getUid());
+                            registerUserLogin();
                             // Inicio de sesión exitoso
                             showToast("Inicio de sesión exitoso");
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
@@ -317,11 +326,12 @@ public class Inicio extends AppCompatActivity {
                                                 photoUrl = pictureData.getString("url");
                                             }
 
-                                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), cifrarBase64(user.getEmail()));
                                             //userdb.actualizarLogin(user.getUid());
                                             //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
                                             sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
                                             //sincronizarUsers.registrarLogin(user.getUid());
+                                            registerUserLogin();
 
                                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                                             intent.putExtra("name", user.getDisplayName());
@@ -364,6 +374,26 @@ public class Inicio extends AppCompatActivity {
         signInLauncher.launch(signInIntent);
     }
 
+    private void registerUserLogin() {
+        // Compruebo si el uid es correcto y no está vacio
+        if (auth.getCurrentUser().getUid() != null) { // En caso de que el uide esté bien
+            // Registro el login en la base de datos local
+            userdb.actualizarLogin(auth.getCurrentUser().getUid());
+            // Registo el login en la base de datos en la nube
+            sincronizarUsers.registrarLogin(auth.getCurrentUser().getUid());
+            // Muestro el Toast diciendo que el login se ha actualizado
+            //showToast("Login Actualizado: "+databaseUsers.obtenerTiempoActual());
+            // Establezco en las preferencias el editor para cambiar cosas
+            SharedPreferences.Editor editor = preferences.edit();
+            // En el editor establezco que el ususario si tiene la sesión iniciada
+            editor.putBoolean("is_logged_in", true);
+            // Establezco los cambios en las preferencias
+            editor.apply();
+            // En el LogCat imprimo que se ha registrado el logout en la bd
+            Log.d("AppLifecycleManager", "Login registrado en la base de datos.");
+        }
+    }
+
     /**
      * @param account
      * Método en el que lo que hago es solicitar a Google el token id que se generá al iniciar sesión
@@ -381,10 +411,11 @@ public class Inicio extends AppCompatActivity {
                         // Compruebo una vez la tarea realizada si ha salido bien o no
                         if (task.isSuccessful()) { // En caso de que la tarea salga bien
                             FirebaseUser user = auth.getCurrentUser();
-                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            userdb.insertarUsuario(user.getUid(), user.getDisplayName(), cifrarBase64(user.getEmail()));
                             //userdb.actualizarLogin(user.getUid());
                             //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
                             sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            registerUserLogin();
                             //sincronizarUsers.registrarLogin(user.getUid());
                             // Creo un intent para poder pasar al MainAcivity una vez iniciada la sesión
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
@@ -408,6 +439,10 @@ public class Inicio extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private String cifrarBase64(String dato) {
+        return Base64.encodeToString(dato.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
     }
 
     /**
