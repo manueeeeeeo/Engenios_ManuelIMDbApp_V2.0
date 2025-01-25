@@ -132,6 +132,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.976" />
 
+
+
     <EditText
         android:id="@+id/editTelefono"
         android:layout_width="300dp"
@@ -150,14 +152,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.585" />
 
-    <Spinner
-        android:id="@+id/spinner_numero"
-        android:layout_width="132dp"
-        android:layout_height="38dp"
+    <com.hbb20.CountryCodePicker
+        android:id="@+id/prefijoNumero"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:ccp_showFlag="true"
+        app:ccp_showFullName="true"
+        app:ccp_showNameCode="false"
+        app:ccp_showPhoneCode="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.057"
+        app:layout_constraintHorizontal_bias="0.062"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.499" />
+        app:layout_constraintVertical_bias="0.515" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

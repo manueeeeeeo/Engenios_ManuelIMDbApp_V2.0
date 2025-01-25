@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -68,6 +69,7 @@ public class Inicio extends AppCompatActivity {
     private String email = null;
     private String clave = null;
     private DatabaseUsers userdb = null;
+    private UsersSync sincronizarUsers = null;
 
     private boolean seVeClave = false;
 
@@ -88,6 +90,8 @@ public class Inicio extends AppCompatActivity {
         callbackManager = CallbackManager.Factory.create();
 
         userdb = new DatabaseUsers(this);
+
+        sincronizarUsers = new UsersSync();
 
         editCorreo = (EditText) findViewById(R.id.editCorreo);
         editClave = (EditText) findViewById(R.id.editClave);
@@ -247,8 +251,10 @@ public class Inicio extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             FirebaseUser user = auth.getCurrentUser();
                             userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
-                            userdb.actualizarLogin(user.getUid());
-                            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                            //userdb.actualizarLogin(user.getUid());
+                            //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                            sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            //sincronizarUsers.registrarLogin(user.getUid());
                             // Inicio de sesión exitoso
                             showToast("Inicio de sesión exitoso");
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
@@ -312,8 +318,10 @@ public class Inicio extends AppCompatActivity {
                                             }
 
                                             userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
-                                            userdb.actualizarLogin(user.getUid());
-                                            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                                            //userdb.actualizarLogin(user.getUid());
+                                            //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                                            sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                                            //sincronizarUsers.registrarLogin(user.getUid());
 
                                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                                             intent.putExtra("name", user.getDisplayName());
@@ -374,8 +382,10 @@ public class Inicio extends AppCompatActivity {
                         if (task.isSuccessful()) { // En caso de que la tarea salga bien
                             FirebaseUser user = auth.getCurrentUser();
                             userdb.insertarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
-                            userdb.actualizarLogin(user.getUid());
-                            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                            //userdb.actualizarLogin(user.getUid());
+                            //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                            sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                            //sincronizarUsers.registrarLogin(user.getUid());
                             // Creo un intent para poder pasar al MainAcivity una vez iniciada la sesión
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                             // Establezco como parceable la key y el valor del nombre de usuario de la cuenta que inicio
@@ -423,8 +433,10 @@ public class Inicio extends AppCompatActivity {
                 providerId = userInfo.getProviderId();
             }
 
-            userdb.actualizarLogin(currentUser.getUid());
-            showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+            //userdb.actualizarLogin(currentUser.getUid());
+            //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+            sincronizarUsers.agregarOActualizarUsuario(currentUser.getUid(), currentUser.getDisplayName(), currentUser.getEmail());
+            //sincronizarUsers.registrarLogin(currentUser.getUid());
 
             // Creo el Intent
             Intent intent = new Intent(Inicio.this, MainActivity.class);

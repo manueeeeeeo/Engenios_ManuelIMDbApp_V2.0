@@ -14,6 +14,8 @@
 
     <string name="client_id">109268670153-s2amnspfqgq6b0pdde8b1qncvj8p450j.apps.googleusercontent.com</string>
 
+    <string name="apiKey_Maps">AIzaSyAER7D-uvYpBOG3wZjz9z3AeGulqAci-OU</string>
+
     <string name="facebook_app_id">869713218448498</string>
     <string name="fb_login_protocol_scheme">fb869713218448498</string>
     <string name="facebook_client_token">EAAMWZCZBNxLHIBO6AkbZBZBpJrBchKiAgLwU7FGxnglTZAMXYYCmJslnOucx4M0NrFUzsWb2ZABwcmwReSZCPl6omM5v2ljX7biqTQluyUJxQP7WDZCvAo0WSrZADdiEQDIZCxsaYBQ1Pz94a1Cxw71eZAz6aAtNwO0McB1ZBnA8ou9SKIGtc9Lq9ZAW1tLnw3tNsGNQpI0EgmnXdEVxMZA09AszCeuHmBOzonIbJ9x3RcaZBIZCX6KJbxaNTfLd7vi3Ys4utgZDZD</string>

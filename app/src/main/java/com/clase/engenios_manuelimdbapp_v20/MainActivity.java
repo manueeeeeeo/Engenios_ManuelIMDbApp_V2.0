@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
+import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Movie> movieList = new ArrayList<>(); // Lista compartida
     private boolean datosActualizados = false; // Indicador de cambio de datos
     private DatabaseUsers userdb = null;
+    private UsersSync sincronizacionUser = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         uIdUsuario = sharedPreferences.getString("uIdUsuario", "nada");
 
         userdb = new DatabaseUsers(this);
+
+        sincronizacionUser = new UsersSync();
 
         // Obtengo el Intent a traves del cual he accedido a esta Actividad
         Intent intent = getIntent();
@@ -248,8 +252,9 @@ public class MainActivity extends AppCompatActivity {
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
         auth.signOut();
 
-        userdb.actualizarLogout(uIdUsuario);
-        showToast("Logout Actualizado: "+userdb.obtenerTiempoActual());
+        sincronizacionUser.registrarLogout(uIdUsuario);
+        //userdb.actualizarLogout(uIdUsuario);
+        //showToast("Logout Actualizado: "+userdb.obtenerTiempoActual());
 
         // Creamos un nuevo Intent para redirigir el usuario a la actividad de Inicio
         Intent intent = new Intent(MainActivity.this, Inicio.class);
