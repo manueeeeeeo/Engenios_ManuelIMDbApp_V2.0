@@ -362,7 +362,7 @@ public class EditarPerfil extends AppCompatActivity {
      * guarde en la bd local*/
     private String convertirImagenABase64(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream); // Usar JPEG con calidad ajustada
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
