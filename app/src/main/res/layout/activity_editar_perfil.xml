@@ -25,25 +25,26 @@
 
     <EditText
         android:id="@+id/editNombre"
-        android:layout_width="300dp"
+        android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_edittext"
         android:ems="10"
         android:hint="Nombre..."
+        android:maxLength="40"
         android:inputType="text"
         android:padding="7dp"
         android:textColor="#000000"
         android:textColorHint="#646464"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintHorizontal_bias="0.225"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.124" />
 
     <EditText
         android:id="@+id/editCorreo"
-        android:layout_width="300dp"
+        android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_edittext"
         android:ems="10"
@@ -54,25 +55,26 @@
         android:textColorHint="#646464"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintHorizontal_bias="0.225"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.216" />
+        app:layout_constraintVertical_bias="0.215" />
 
     <EditText
         android:id="@+id/editDireccion"
-        android:layout_width="300dp"
+        android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_edittext"
         android:ems="10"
         android:hint="Address..."
+        android:maxLength="230"
         android:inputType="text"
         android:padding="7dp"
         android:textColor="#000000"
         android:textColorHint="#646464"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintHorizontal_bias="0.225"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.301" />
@@ -145,6 +147,7 @@
         android:padding="7dp"
         android:textColor="#000000"
         android:textColorHint="#646464"
+        android:maxLength="15"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.144"
