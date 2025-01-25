@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
@@ -215,7 +216,12 @@ public class MainActivity extends AppCompatActivity {
             if (!base64Imagen.isEmpty()) {
                 Bitmap imagenPerfil = convertirBase64ABitmap(base64Imagen);
                 if (imagenPerfil != null) {
-                    infoUrlFoto.setImageBitmap(imagenPerfil);
+                    //infoUrlFoto.setImageBitmap(imagenPerfil);
+                    Glide.with(this)
+                            .load(imagenPerfil)  // Carga directa del bitmap
+                            .override(300, 300)  // Reducir tamaño de la imagen cargada
+                            .centerCrop()  // Recortar la imagen para ajustarla mejor
+                            .into(infoUrlFoto);
                 } else {
                     Log.e("Imagen", "No se pudo convertir la imagen");
                 }
@@ -239,7 +245,9 @@ public class MainActivity extends AppCompatActivity {
         }
         try {
             byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 2;
+            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length, options);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return null;
