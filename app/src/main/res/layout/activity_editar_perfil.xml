@@ -160,7 +160,6 @@
         app:ccp_showFullName="true"
         app:ccp_showNameCode="false"
         app:ccp_showPhoneCode="true"
-        app:ccp_textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.062"
