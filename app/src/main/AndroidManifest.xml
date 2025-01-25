@@ -50,6 +50,10 @@
             android:name="com.facebook.sdk.ClientToken"
             android:value="@string/facebook_client_token" />
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/apiKey_Maps" />
+
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
