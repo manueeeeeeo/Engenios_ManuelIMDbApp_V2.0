@@ -1,9 +1,15 @@
 package com.clase.engenios_manuelimdbapp_v20;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
@@ -63,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean datosActualizados = false; // Indicador de cambio de datos
     private DatabaseUsers userdb = null;
     private UsersSync sincronizacionUser = null;
+    private String base64Imagen = null;
+    private String nombreUsuario = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,10 +185,14 @@ public class MainActivity extends AppCompatActivity {
             infoCorreo.setText(email);
         }
 
+        obtenerDatosUsuario(uid);
+
         // Comprobamos que dentro de la variable que contiene la url de la foto de perfil haya algo
-        if ((imagenUrl != null || !imagenUrl.isEmpty() || !imagenUrl.equals("")) && !message.equals("Conectado por otro método")) {
+        if ((imagenUrl != null || !imagenUrl.isEmpty() || !imagenUrl.equals("")) && !message.equals("Conectado por otro método") && base64Imagen.isEmpty()) {
             // En caso afirmativo, procedo a cargar con la libreria Picasso la imagen
             Picasso.get().load(imagenUrl).into(infoUrlFoto);
+        }else{
+            obtenerDatosUsuario(uid);
         }
 
         // Configurar el NavigationController
@@ -192,6 +204,46 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+    }
+
+    @SuppressLint("Range")
+    public void obtenerDatosUsuario(String uid) {
+        Cursor cursor = userdb.obtenerUsuarioPorUid(uid);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            base64Imagen = cursor.isNull(cursor.getColumnIndex("imagen")) ? "" : cursor.getString(cursor.getColumnIndex("imagen"));
+            if (!base64Imagen.isEmpty()) {
+                Bitmap imagenPerfil = convertirBase64ABitmap(base64Imagen);
+                if (imagenPerfil != null) {
+                    infoUrlFoto.setImageBitmap(imagenPerfil);
+                } else {
+                    Log.e("Imagen", "No se pudo convertir la imagen");
+                }
+            } else {
+                Log.d("Imagen", "No hay imagen guardada en la BD");
+            }
+            nombreUsuario = cursor.isNull(cursor.getColumnIndex("displayName")) ? "" : cursor.getString(cursor.getColumnIndex("displayName"));
+            infoNombre.setText(nombreUsuario);
+        } else {
+            Log.d("Usuario", "No se encontró el usuario con UID: " + uid);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+    }
+
+    private Bitmap convertirBase64ABitmap(String base64String) {
+        if (base64String == null || base64String.isEmpty()) {
+            return null;
+        }
+        try {
+            byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
