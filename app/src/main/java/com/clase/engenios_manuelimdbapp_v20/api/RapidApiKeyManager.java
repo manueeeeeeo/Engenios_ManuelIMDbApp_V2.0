@@ -35,4 +35,8 @@ public class RapidApiKeyManager {
         }
         currentKeyIndex = (currentKeyIndex + 1) % apiKeys.size(); // Cicla entre las claves
     }
+
+    public int getTotalKeys() {
+        return apiKeys.size();
+    }
 }

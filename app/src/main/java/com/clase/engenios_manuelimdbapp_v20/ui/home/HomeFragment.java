@@ -87,23 +87,28 @@ public class HomeFragment extends Fragment {
                     // Creo una respuesta para poder ver si nos pasamos de peticiones o no
                     okhttp3.Response response = chain.proceed(newRequest);
 
+                    // Intentos
+                    int repeticiones = 0;
+
                     // Verificamos si la respuesta tiene un error 429, que ya hemos llegado a las 500 respuestas
-                    if (response.code() == 429) {
-                        // Lanzo en el LogCat el error ocasionado, que es que ya hemos alcanzado el limite de la api
-                        Log.w("Interceptor", "Límite de solicitudes alcanzado. Cambiando API Key.");
-                        response.close(); // Cerramos la respuesta actual
+                    while (response.code() == 429 && repeticiones < 4) {
+                        Log.w("Interceptor", "Límite de solicitudes alcanzado. Intentando otra clave API.");
+                        response.close();
 
-                        IMDBApiClient.switchApiKey(); // Cambiamos a la siguiente clave
-
-                        // Obtengo en el string de key de la api la key de ese momento
+                        IMDBApiClient.switchApiKey();
                         apiKey = IMDBApiClient.getApiKey();
 
-                        // Reintentamos la solicitud con la nueva clave
                         Request retriedRequest = newRequest.newBuilder()
                                 .removeHeader("X-RapidAPI-Key")
                                 .addHeader("X-RapidAPI-Key", apiKey)
                                 .build();
-                        return chain.proceed(retriedRequest);
+
+                        response = chain.proceed(retriedRequest);
+                        repeticiones++;
+                    }
+
+                    if (response.code() == 429) {
+                        Log.e("Interceptor", "Todas las claves han alcanzado el límite de solicitudes.");
                     }
 
                     return response; // Devolvemos la respuesta si no hay error
