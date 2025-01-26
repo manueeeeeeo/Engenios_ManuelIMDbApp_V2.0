@@ -282,18 +282,6 @@ public class Inicio extends AppCompatActivity {
                 });
     }
 
-    public void proseguir(){
-        FirebaseUser user = auth.getCurrentUser();
-        Intent in = new Intent(Inicio.this, MainActivity.class);
-        in.putExtra("uidUs", user.getUid());
-        in.putExtra("photoUrl", "");
-        in.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
-        in.putExtra("email", user.getEmail()); // Establezco el email
-        startActivity(in);
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        finish();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
