@@ -247,7 +247,7 @@ public class Inicio extends AppCompatActivity {
      * en caso de no ser así pues nada, cargo los datos y listo, pero en caso de que
      * si que exista ya algun usuario con ese correo lo que hago es vincular las cuentas
      * y así ese usuario tiene el mismo uid ya sea que inicie por un proveedor o por otro*/
-    private void verificarYVincularCuentas(FirebaseUser user, AuthCredential credential) {
+    private void verificarYVincularCuentas(FirebaseUser user, AuthCredential credential, String prov, AccessToken token) {
         // Obtengo el email del usuario
         String emailComprobar = user.getEmail();
 
@@ -265,27 +265,105 @@ public class Inicio extends AppCompatActivity {
                         user.linkWithCredential(credential)
                                 .addOnCompleteListener(linkTask -> {
                                     if (linkTask.isSuccessful()) { // En caso de que lka vinculación salga bien
-                                        //cargarDatosUsuario(user);
+                                        cargarDatosUsuario(prov, user, token);
                                     } else { // En caso de que ocurra algún error a la hora de vincular las cuentas
                                         // Lanzo un Toast avisando al usuario del error
                                         showToast("Error al vincular cuentas: " + linkTask.getException().getMessage());
                                     }
                                 });
                     } else { // En caso de que el nuevo inicio sea de un proveedor distinto
-                        //cargarDatosUsuario(user);
+                        cargarDatosUsuario(prov, user, token);
                     }
                 } else { // En caso de que la lista esté vacia
                     // Cargo los datos del usuario
-                    //cargarDatosUsuario(user);
+                    cargarDatosUsuario(prov, user, token);
                 }
             }
         });
     }
 
     /**
-     * Método en el que*/
-    public void cargarDatosUsuario(){
+     * @param user
+     * @param token
+     * @param tipoProvee
+     * Método en el que paso como parametros el tipo de proveedor, el usuario de firebase
+     * la url de la foto que obtengo de facebook y dependiendo del valor del parametro
+     * tipoProvee voy guardando y pasando al Intent unos datos del usuario u otros, para
+     * así simplificar la tarea de paso de datos y manejar mejor la posible vinculación
+     * de las cuentas*/
+    public void cargarDatosUsuario(String tipoProvee, FirebaseUser user, AccessToken token){
+        if(tipoProvee.equals("Google")){
+            Intent intent = new Intent(Inicio.this, MainActivity.class);
+            // Establezco como parceable la key y el valor del nombre de usuario de la cuenta que inicio
+            intent.putExtra("name", user.getDisplayName());
+            // Establezco como parceable la key y el valor del email de usuario de la cuenta que inicio
+            intent.putExtra("email", user.getEmail());
+            // Establezco como parceable la key y el valor de la url de la foto de usuario de la cuenta que inicio
+            intent.putExtra("photoUrl", user.getPhotoUrl().toString());
+            // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+            intent.putExtra("uidUs", user.getUid());
+            // Establezco como parceable la key y el valor del mensaje para saber si está resgitrado con Google o Facebook
+            intent.putExtra("message", "Conectado por Google");
+            // Iniciamos la actividad ya con el objeto parceable introducido y todo
+            startActivity(intent);
+            // Finalizamos la actividad actual
+            finish();
+        }else if(tipoProvee.equals("Facebook")){
+            obtenerImagenPerfilFacebook(token,user);
+        }else if(tipoProvee.equals("Correo")){
+            Intent intent = new Intent(Inicio.this, MainActivity.class);
+            intent.putExtra("uidUs", user.getUid());
+            intent.putExtra("photoUrl", "");
+            intent.putExtra("message", "Conectado por otro método"); // Establezco el mensaje de conectado con otro método
+            intent.putExtra("email", user.getEmail()); // Establezco el email
+            startActivity(intent);
+            finish();
+        }
+    }
 
+    public void obtenerImagenPerfilFacebook(AccessToken token, FirebaseUser user){
+        // Solicito los detalles del perfil de Facebook usando la API de Graph
+        GraphRequest request = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject object, GraphResponse response) {
+                if (response.getError() == null) {
+                    try {
+                        String facebookUserId = object.getString("id");
+                        String photoUrl = null;
+                        if (object.has("picture")) {
+                            JSONObject pictureData = object.getJSONObject("picture").getJSONObject("data");
+                            photoUrl = pictureData.getString("url");
+                        }
+
+                        userdb.insertarUsuario(user.getUid(), user.getDisplayName(), cifrarBase64(user.getEmail()));
+                        //userdb.actualizarLogin(user.getUid());
+                        //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
+                        sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
+                        //sincronizarUsers.registrarLogin(user.getUid());
+                        registerUserLogin();
+
+                        Intent intent = new Intent(Inicio.this, MainActivity.class);
+                        intent.putExtra("name", user.getDisplayName());
+                        intent.putExtra("photoUrl", photoUrl);
+                        // Establezco como parceable la key y el valor de la uid del usuario de la cuenta que inicio
+                        intent.putExtra("uidUs", user.getUid());
+                        intent.putExtra("message", "Conectado por Facebook");
+                        startActivity(intent);
+                        finish();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        showToast("Error al obtener la foto de perfil.");
+                    }
+                } else {
+                    showToast("Error en la solicitud de perfil de Facebook.");
+                }
+            }
+        });
+
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,picture.type(large)");
+        request.setParameters(parameters);
+        request.executeAsync();
     }
 
     private void registrarseConCorreo(String correo, String clave) {
@@ -317,6 +395,7 @@ public class Inicio extends AppCompatActivity {
                             registerUserLogin();
                             // Inicio de sesión exitoso
                             showToast("Inicio de sesión exitoso");
+                            cargarDatosUsuario("Correo", user, null);
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
                             intent.putExtra("uidUs", user.getUid());
                             intent.putExtra("photoUrl", "");
@@ -351,6 +430,7 @@ public class Inicio extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Si todo fue exitoso
                             FirebaseUser user = auth.getCurrentUser();
+                            cargarDatosUsuario("Facebook", user, token);
 
                             // Solicito los detalles del perfil de Facebook usando la API de Graph
                             GraphRequest request = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
@@ -455,6 +535,7 @@ public class Inicio extends AppCompatActivity {
                             //showToast("Login Actualizado: "+userdb.obtenerTiempoActual());
                             sincronizarUsers.agregarOActualizarUsuario(user.getUid(), user.getDisplayName(), user.getEmail());
                             registerUserLogin();
+                            cargarDatosUsuario("Google", user, null);
                             //sincronizarUsers.registrarLogin(user.getUid());
                             // Creo un intent para poder pasar al MainAcivity una vez iniciada la sesión
                             Intent intent = new Intent(Inicio.this, MainActivity.class);
