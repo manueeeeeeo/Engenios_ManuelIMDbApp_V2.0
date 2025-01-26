@@ -53,6 +53,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * @author Manuel
@@ -237,7 +238,57 @@ public class Inicio extends AppCompatActivity {
         });
     }
 
-    public void registrarseConCorreo(String correo, String clave){
+    /**
+     * @param credential
+     * @param user
+     * Método en el que paso el usuario de firebase y la credencial con la
+     * que inicializo y entro, primero que todo obtengo el email del usuario
+     * y procedo a comprobar si ya existe alguna cuenta en Firebase con ese correo
+     * en caso de no ser así pues nada, cargo los datos y listo, pero en caso de que
+     * si que exista ya algun usuario con ese correo lo que hago es vincular las cuentas
+     * y así ese usuario tiene el mismo uid ya sea que inicie por un proveedor o por otro*/
+    private void verificarYVincularCuentas(FirebaseUser user, AuthCredential credential) {
+        // Obtengo el email del usuario
+        String emailComprobar = user.getEmail();
+
+        // Busco si ya existe el email registrado con otro proveedor
+        auth.fetchSignInMethodsForEmail(emailComprobar).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) { // Enc aso de que todo vaya bien
+                // Obtengo una lista de los métodos con los que se puede iniciar con ese usuarios
+                List<String> signInMethods = task.getResult().getSignInMethods();
+
+                // En caso de que la lista no esté vacia, significa que ya existe algun proveedor para ese usuario
+                if (signInMethods != null && !signInMethods.isEmpty()) {
+                    // Si ya hay métodos vinculados, procedo a verificar si es diferente al actual
+                    if (!signInMethods.contains(credential.getSignInMethod())) {
+                        // Vinculo la nueva credencial si no está asociada
+                        user.linkWithCredential(credential)
+                                .addOnCompleteListener(linkTask -> {
+                                    if (linkTask.isSuccessful()) { // En caso de que lka vinculación salga bien
+                                        //cargarDatosUsuario(user);
+                                    } else { // En caso de que ocurra algún error a la hora de vincular las cuentas
+                                        // Lanzo un Toast avisando al usuario del error
+                                        showToast("Error al vincular cuentas: " + linkTask.getException().getMessage());
+                                    }
+                                });
+                    } else { // En caso de que el nuevo inicio sea de un proveedor distinto
+                        //cargarDatosUsuario(user);
+                    }
+                } else { // En caso de que la lista esté vacia
+                    // Cargo los datos del usuario
+                    //cargarDatosUsuario(user);
+                }
+            }
+        });
+    }
+
+    /**
+     * Método en el que*/
+    public void cargarDatosUsuario(){
+
+    }
+
+    private void registrarseConCorreo(String correo, String clave) {
         auth.createUserWithEmailAndPassword(correo, clave)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
