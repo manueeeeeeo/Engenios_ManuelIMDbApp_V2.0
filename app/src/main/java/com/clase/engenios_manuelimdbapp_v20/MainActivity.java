@@ -296,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
      * la sesión y volvamos a la actividad de Login aunque volvamos a pulsar el botón de iniciar con Google,
      * que nos vuelva a dejar elegir la cuenta de Google con la que queremos iniciar sesión*/
     private void signOut() {
+        registerUserLogout();
         // Compruebo si el mensaje es que hemos conectado por facebook o por google
         if (message.equals("Conectado por Facebook")) { // En caso de habernos conectado por Facebook
             // Cerramos la sesión de Facebook
@@ -312,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
         auth.signOut();
 
-        sincronizacionUser.registrarLogout(uIdUsuario);
+        //sincronizacionUser.registrarLogout(uIdUsuario);
         //userdb.actualizarLogout(uIdUsuario);
         //showToast("Logout Actualizado: "+userdb.obtenerTiempoActual());
 
@@ -330,6 +331,30 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    /**
+     * Método en el que primero que todo obtengo el uid del usuario registrado
+     * compruebo que el uid sea bien y no este vacio, una vez comprobado, procedo
+     * a insertar el registro del logout tanto en la base de datos local y en la
+     * nube, y además en las preferencias de ususario establezco que el usuario
+     * no está logeado actualmente*/
+    private void registerUserLogout() {
+        // Compruebo si el uid es correcto y no está vacio
+        if (auth.getCurrentUser().getUid() != null) { // En caso de que el uide esté bien
+            // Registro el logout en la base de datos local
+            userdb.actualizarLogout(uid);
+            // Sincronizo el nuevo logout con la base de datos de Firestore
+            sincronizacionUser.registrarLogout(uid);
+            // Establezco en las preferencias el editor para cambiar cosas
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            // En el editor establezco que el ususario no tiene la sesión iniciada
+            editor.putBoolean("is_logged_in", false);
+            // Establezco los cambios en las preferencias
+            editor.apply();
+            // En el LogCat imprimo que se ha registrado el logout en la bd
+            Log.d("AppLifecycleManager", "Logout registrado en la base de datos.");
+        }
     }
 
     /**
