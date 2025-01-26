@@ -8,7 +8,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * @version 1.0*/
 
 public class IMDBApiClient {
-    private static final String BASE_URL = "imdb-com.p.rapidapi.com";
     private static IMDBApiService apiService;
     private static RapidApiKeyManager rapidApiKeyManager = new RapidApiKeyManager();
 
