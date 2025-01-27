@@ -8,35 +8,56 @@ import java.util.List;
  * @version 1.0*/
 
 public class RapidApiKeyManager {
-    private List<String> apiKeys = new ArrayList<>();
-    private int currentKeyIndex = 0;
+    // Variables necesarias para la clase
+    private List<String> apiKeys = new ArrayList<>(); // Una lista de tipo string en donde almacenaré todas las keys
+    private int currentKeyIndex = 0; // Variable de tipo int para saber en que posición de la lista estoy
 
-    // Constructor que inicializa las claves API
+    /**
+     * Constructor de la clase en donde lo que hago
+     * es agregar a la lista de las apiKeys todas aquellas
+     * de las que dispongo*/
     public RapidApiKeyManager() {
-        // Agrega aquí tus claves de RapidAPI
+        // Agrego aquí tus claves de RapidAPI
         apiKeys.add("45157d396bmshf14702227e85da3p1ff7a9jsna860971b474a");
         apiKeys.add("6d380b1d6cmsh63788105a9b29dfp1a9da1jsnc6a1d0b0947d");
         apiKeys.add("2f2412d974msh6d1124b73789023p1ca9dfjsn6e660867f17c");
         apiKeys.add("2d4355b846mshc466fa63c246723p12a355jsnc0a3ef230019");
     }
 
-    // Obtiene la clave API actual
+    /**
+     * @return
+     * Método en el que obtengo la key en la
+     * posición actual*/
     public String getCurrentKey() {
-        if (apiKeys.isEmpty()) {
+        // Compruebo si está vacia la key
+        if (apiKeys.isEmpty()) { // Si está vacia
+            // Lanzo una excepción indicnado que no hay APIS configuradas
             throw new IllegalStateException("No hay claves API configuradas.");
         }
+        // Devuelvo la key de la api en ese momento
         return apiKeys.get(currentKeyIndex);
     }
 
-    // Cambia a la siguiente clave API
+    /**
+     * Método en el que voy cambiando las keys de las apis
+     * hasta encontrar una que valga,a demás voy ciclando entre las
+     * keys para en caso de que se acaben volver al principio*/
     public void switchToNextKey() {
-        if (apiKeys.isEmpty()) {
+        // Compruebo si la api está vacia
+        if (apiKeys.isEmpty()) { // En caso de que este vacia
+            // Lanzo una excepción indicnado que no hay APIS configuradas
             throw new IllegalStateException("No hay claves API configuradas.");
         }
-        currentKeyIndex = (currentKeyIndex + 1) % apiKeys.size(); // Cicla entre las claves
+        // Obtengo la nueva key de la api ciclando entre las claves
+        currentKeyIndex = (currentKeyIndex + 1) % apiKeys.size();
     }
 
+    /**
+     * @return
+     * Método en el que devuelvo el número
+     * de tamaño de la lista de las keys apis*/
     public int getTotalKeys() {
+        // Obtengo el tamaño de la lista de apisKeys
         return apiKeys.size();
     }
 }
