@@ -297,17 +297,11 @@ public class MainActivity extends AppCompatActivity {
      * que nos vuelva a dejar elegir la cuenta de Google con la que queremos iniciar sesión*/
     private void signOut() {
         registerUserLogout();
-        // Compruebo si el mensaje es que hemos conectado por facebook o por google
-        if (message.equals("Conectado por Facebook")) { // En caso de habernos conectado por Facebook
-            // Cerramos la sesión de Facebook
-            LoginManager.getInstance().logOut();
-            // Lanzamos un Toast diciendo que hemos cerrado la sesión de la cuenta de Facebook
-            showToast("Sesión cerrada con Facebook");
-        } else if (message.equals("Conectado por Google")) { // En caso de habernos conectado por Google
-            // Establecemos que el cliente del objeto de GoogleSingIn también cierre la sesión
+
+        if (auth.getCurrentUser().getUid() != null){
             GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
-            // Lanzamos un Toast diciendo que hemos cerrado la sesión de la cuenta de Google
-            showToast("Sesión cerrada con Google");
+            LoginManager.getInstance().logOut();
+            showToast("Sesión cerrada");
         }
 
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
