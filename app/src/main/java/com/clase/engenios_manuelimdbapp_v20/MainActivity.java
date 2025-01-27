@@ -313,16 +313,16 @@ public class MainActivity extends AppCompatActivity {
         // Utilizamos el submetodo de auth firebase para cerrar la sesión
         auth.signOut();
 
-        //sincronizacionUser.registrarLogout(uIdUsuario);
-        //userdb.actualizarLogout(uIdUsuario);
-        //showToast("Logout Actualizado: "+userdb.obtenerTiempoActual());
-
-        // Creamos un nuevo Intent para redirigir el usuario a la actividad de Inicio
-        Intent intent = new Intent(MainActivity.this, Inicio.class);
-        // Iniciamos el intent, iniciando así la nueva actividad
-        startActivity(intent);
-        // Finalizamos la actividad actual
-        finish();
+        // Verificamos si la sesión se cerró correctamente
+        if (auth.getCurrentUser() == null) {
+            // Si no hay un usuario actual (sesión cerrada), redirigimos al Inicio
+            Intent intent = new Intent(MainActivity.this, Inicio.class);
+            startActivity(intent);
+            finish();
+        } else {
+            // Si la sesión no se cerró correctamente, mostramos un mensaje de error
+            showToast("No se pudo cerrar sesión correctamente.");
+        }
     }
 
 
