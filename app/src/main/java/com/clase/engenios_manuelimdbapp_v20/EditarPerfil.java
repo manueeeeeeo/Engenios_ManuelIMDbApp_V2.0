@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -44,6 +45,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.hbb20.CountryCodePicker;
+import com.squareup.picasso.Picasso;
 
 import android.util.Base64;
 
@@ -221,25 +223,22 @@ public class EditarPerfil extends AppCompatActivity {
         if(!numeroStr.isEmpty()){ // Sino está vacia
             // Establezco en la variable del numero descifrado el valor del mismo
             numeroDescifrado = descifrarBase64(numeroStr);
-        }
 
-        // Compruebo si el numero cifrado no está vacio
-        if (!numeroDescifrado.isEmpty() && numeroDescifrado.contains(" ")) { // En caso de no estar vacio
-            // Divido el string en dos partes a partide un espacio
-            String[] partes = numeroDescifrado.split(" ", 2);
-            // Me guardo la primera parte que será la relacionada con el prefijo
-            prefijoObtenido = partes[0];
-            // Me guardo la segunda parte que será la relacionada con el número
-            numeroObtenido = partes[1];
-            // Elimino del prefijo el +, para quedarme con el número
-            prefijoObtenido = prefijoObtenido.replace("+", "");
-            // Establezco el número obtenido al editText
-            editTele.setText(numeroObtenido);
-            // Establezco en el ccp el prefijo del pais
-            ccp.setCountryForPhoneCode(Integer.parseInt(prefijoObtenido));
-        } else { // En caso de que este vacio
-            prefijoObtenido = "";
-            numeroObtenido = "";
+            // Compruebo si el numero cifrado no está vacio
+            if (!numeroDescifrado.isEmpty() && numeroDescifrado.contains(" ")) { // En caso de no estar vacio
+                // Divido el string en dos partes a partide un espacio
+                String[] partes = numeroDescifrado.split(" ", 2);
+                // Me guardo la primera parte que será la relacionada con el prefijo
+                prefijoObtenido = partes[0];
+                // Me guardo la segunda parte que será la relacionada con el número
+                numeroObtenido = partes[1];
+                // Elimino del prefijo el +, para quedarme con el número
+                prefijoObtenido = prefijoObtenido.replace("+", "");
+                // Establezco el número obtenido al editText
+                editTele.setText(numeroObtenido);
+                // Establezco en el ccp el prefijo del pais
+                ccp.setCountryForPhoneCode(Integer.parseInt(prefijoObtenido));
+            }
         }
 
         // Establezco en el ediText del correo el email descifrado en Base64
@@ -411,10 +410,38 @@ public class EditarPerfil extends AppCompatActivity {
                         // Lanzo el intent
                         galleryResult.launch(pickPhotoIntent);
                     }else if(which == 2){ // Si elige introducir una url
-                        showToast("Has elegido la URL");
+                        showUrlInputDialog();
                     }
                 })
                 .show(); // Muestro el dialogo
+    }
+
+    /**
+     * Método para que en caso de elegir la opción de introducir
+     * una url de una imagen para establecermela, muestro un dialogo
+     * con un editText para introducir la url y llamar al método para
+     * validarla*/
+    private void showUrlInputDialog() {
+        // Creo un EditText para que el usuario ingrese la URL
+        final EditText urlInput = new EditText(EditarPerfil.this);
+        urlInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI); // Me asegurode  que el teclado sea adecuado para URLs
+
+        // Creo un nuevo dialogo
+        new AlertDialog.Builder(EditarPerfil.this)
+                .setTitle("Ingresa la URL de la Imagen") // Título del diálogo
+                .setView(urlInput) // Vista del EditText
+                .setPositiveButton("Cargar", (dialog, which) -> {
+                    String url = urlInput.getText().toString().trim(); // Obtenengo la URL ingresada
+
+                    // Llamo al método para agregar la foto de perfil con la URL con un try catch para manejar la excepción
+                    try {
+                        agregarFotoPerfilURL(url); // Llamo al método que valida y carga la imagen
+                    } catch (IllegalArgumentException e) {
+                        showToast("Error: " + e.getMessage()); // Muestro el toast si la url no es valida
+                    }
+                })
+                .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss()) // Botón de cancelar
+                .show(); // Muestro el cuadro de diálogo
     }
 
     /**
@@ -463,6 +490,40 @@ public class EditarPerfil extends AppCompatActivity {
             // Lanzo una excepción
             return false;
         }
+    }
+
+    /**
+     * @param url
+     * Método agregar una foto de perfil basandonos en la url
+     * pasada como parametro, compruebo que no sea nulo, compruebo
+     * que no contenga espacios, y pruebo si es una url legal, en caso
+     * de que pase todo, cargo la url con picasso*/
+    public void agregarFotoPerfilURL(String url){
+        // Compruebo que la url del string no sea nulo ni este vacia
+        if (url == null || url.trim().isEmpty()) { // De ser así
+            // Lanzo la excepción
+            throw new IllegalArgumentException("La URL no puede ser nula o vacía.");
+        }
+
+        // Comprubo que no contenga espacios en la url
+        if (url.contains(" ")) { // D ser así
+            // Lanzo la excepción
+            throw new IllegalArgumentException("La URL no puede contener espacios o múltiples URLs: " + url);
+        }
+
+        // Valido que la url tenga el formato adecuado con un try catch para cazar la exceción
+        try {
+            new java.net.URL(url); // Si falla, lanzará MalformedURLException
+        } catch (java.net.MalformedURLException e) {
+            throw new IllegalArgumentException("La URL no tiene un formato válido: " + url, e);
+        }
+
+        // Utilizo picasso para cargar la imagen en el elemento de imageview
+        Picasso.get()
+                .load(url) // URL de la imagen
+                .resize(800, 800) // Redimensiona la imagen a un tamaño adecuado (ajustar según tus necesidades)
+                .centerCrop() // Asegura que la imagen se recorte y se ajuste correctamente al ImageView
+                .into(imagenFotoPerfil); // Coloca la imagen cargada en el ImageView
     }
 
     /**
