@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -52,39 +53,49 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @author Manuel
+ * @version 1.0*/
+
 public class EditarPerfil extends AppCompatActivity {
-    private EditText editCorreo = null;
-    private EditText editNombre = null;
-    private EditText editUbi = null;
-    private EditText editTele = null;
-    private Button btnGuardar = null;
-    private Button btnElegirImagen = null;
-    private Button btnElegirUbicacion = null;
-    private Button btnConfirmarUbicacion = null;
-    private CountryCodePicker ccp = null;
-    private SharedPreferences sharedPreferences = null;
-    private ImageView imagenFotoPerfil = null;
-    private Toast mensajeToast = null;
-    private Bitmap selectedImage = null;
-    private ImageView imagenMapa;
+    private EditText editCorreo = null; // Variable para controlar el editText del correo
+    private EditText editNombre = null; // Variable para controlar el editText del nombre
+    private EditText editUbi = null; // Variable para controlar el editText de la ubicación
+    private EditText editTele = null; // Variable para controlar el editText del telefono
+    private Button btnGuardar = null; // Variable para controlar el botón de guardar cambios
+    private Button btnElegirImagen = null; // Variable para controlar el botón de elegir una imagen de perfil
+    private Button btnElegirUbicacion = null; // Variable para controlar el botón de elegir la ubicación
+    private Button btnConfirmarUbicacion = null; // Variable para controlar el botón de confirmar la ubicación
+    private CountryCodePicker ccp = null; // Variable para controlar el spinner que muestra todos los prefijos
+    private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario
+    private ImageView imagenFotoPerfil = null; // Variable para manejar la imagen de la foto de perfil nueva
+    private Toast mensajeToast = null; // Variable para manejar todos los toast de esta actividad
+    private Bitmap selectedImage = null; // Variable de tipo Bitmap para manejar la imagen elegida o sacada
+    private ImageView imagenMapa = null; // Varibale para ver si has elegido el sitio correcto del mapa
+    private Button cancelarUbi = null; // Variable para manejar el botón de cancelar ubicacion
+    private TextView textoTitulo = null; // Variable que representa y maneja el textview del titulo de la actividad
 
-    private String prefijo = null;
-    private String pais = null;
-    private String paisCodigo = null;
-    private String uid = null;
+    private String prefijo = null; // Variable para manejar el prefijo elegido
+    private String pais = null; // Variable para manejar el pais del prefijo elegido
+    private String paisCodigo = null; // Variable para manejar el código del pais
+    private String uid = null; // Variable para manejar el uid del usuario
+    private String prefijoObtenido = null; // Variable donde guardo el prefijo obtenido de la base de datos
+    private String numeroObtenido = null; // Variable donde guardo el número obtenido de la base de datos
+    private String numeroDescifrado = null; // Variable donde guardo el número descifrado completo con el prefijo
 
-    private String nombre = null;
-    private String email = null;
-    private String ubicacionStr = null;
-    private String numeroStr = null;
-    private String urlPhoto = null;
+    private String nombre = null; // Variable para manejar el nombre del usuario
+    private String email = null; // Variable para manejar el email del usuario
+    private String ubicacionStr = null; // Variable para manejar la ubicación del usuario
+    private String numeroStr = null; // Variable para manejar el número del usuario
+    private String urlPhoto = null; // Variable para manejar el string de la imagen
 
-    private DatabaseUsers usersDB = null;
-    private FirebaseAuth auth = null;
-    private FirebaseFirestore db = null;
+    private DatabaseUsers usersDB = null; // Variable que sirve para manejar la base de datos local de los usuarios
+    private FirebaseAuth auth = null; // Variable que sirve para manejar la autentificación de los usuarios
+    private FirebaseFirestore db = null; // Variable que sirve para manejar la base de datos en la nube de los usuarios
 
-    private static final int PERMISSION_REQUEST_CODE = 100;
+    private static final int PERMISSION_REQUEST_CODE = 100; // Variable para manejar los permisos del usuario
 
+    // Permiso para poder acceder a la camara del usuario
     private final ActivityResultLauncher<Intent> cameraResult =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
@@ -97,6 +108,7 @@ public class EditarPerfil extends AppCompatActivity {
                 }
             });
 
+    // Permiso para poder acceder a la galeria del usuario
     private final ActivityResultLauncher<Intent> galleryResult =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
@@ -115,6 +127,7 @@ public class EditarPerfil extends AppCompatActivity {
                 }
             });
 
+    // Resultado de la actividad para elegir la ubicación del usuario
     private final ActivityResultLauncher<Intent> placePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -138,6 +151,7 @@ public class EditarPerfil extends AppCompatActivity {
 
                         imagenMapa.setVisibility(View.VISIBLE);
                         btnConfirmarUbicacion.setVisibility(View.VISIBLE);
+                        cancelarUbi.setVisibility(View.VISIBLE);
                         btnGuardar.setVisibility(View.GONE);
                         ccp.setVisibility(View.GONE);
                         btnElegirImagen.setVisibility(View.GONE);
@@ -147,6 +161,7 @@ public class EditarPerfil extends AppCompatActivity {
                         editNombre.setVisibility(View.GONE);
                         editCorreo.setVisibility(View.GONE);
                         editUbi.setVisibility(View.GONE);
+                        textoTitulo.setText("Elegir Ubicación!!");
                     }
                 }
             }
@@ -164,12 +179,17 @@ public class EditarPerfil extends AppCompatActivity {
             return insets;
         });
 
+        // Inicializo el autentificador de firebase
         auth = FirebaseAuth.getInstance();
+        // Inicializo la base de datos en la nube de firebase
         db = FirebaseFirestore.getInstance();
+        // Inicializo la base de datos local
         usersDB = new DatabaseUsers(this);
 
+        // Obtengo el uid del usuario y lo guardo en una variable
         uid = auth.getCurrentUser().getUid();
 
+        // Obtengo todos los elementos del usuario de la interfaz
         btnGuardar = (Button) findViewById(R.id.btnGuardarCambios);
         btnElegirUbicacion = (Button) findViewById(R.id.btnUbi);
         btnElegirImagen = (Button) findViewById(R.id.btnElegirIMG);
@@ -181,21 +201,53 @@ public class EditarPerfil extends AppCompatActivity {
         editCorreo = (EditText) findViewById(R.id.editCorreo);
         editNombre = (EditText) findViewById(R.id.editNombre);
         imagenMapa = (ImageView) findViewById(R.id.mapImageView);
+        textoTitulo = (TextView) findViewById(R.id.textView2);
+        cancelarUbi = (Button) findViewById(R.id.btncancelarUbicacion);
 
+        // Llamo al método para obtener los datos del usuario pasandole el uid
         obtenerDatosUsuario(uid);
 
-        if(!nombre.isEmpty()){
+        // Compruebo si la variable nombre está vacia
+        if(!nombre.isEmpty()){ // Sino está vacia
+            // Establezco el valor al editText
             editNombre.setText(nombre);
         }
-        if(!ubicacionStr.isEmpty()){
+        // Compruebo si la variable ubicación está vacia
+        if(!ubicacionStr.isEmpty()){ // Sino está vacia
+            // Establezco el valor al editText
             editUbi.setText(ubicacionStr);
         }
-        if(!numeroStr.isEmpty()){
-            editTele.setText(descifrarBase64(numeroStr));
+        // Compruebo si la variable numero está vacia
+        if(!numeroStr.isEmpty()){ // Sino está vacia
+            // Establezco en la variable del numero descifrado el valor del mismo
+            numeroDescifrado = descifrarBase64(numeroStr);
         }
+
+        // Compruebo si el numero cifrado no está vacio
+        if (!numeroDescifrado.isEmpty() && numeroDescifrado.contains(" ")) { // En caso de no estar vacio
+            // Divido el string en dos partes a partide un espacio
+            String[] partes = numeroDescifrado.split(" ", 2);
+            // Me guardo la primera parte que será la relacionada con el prefijo
+            prefijoObtenido = partes[0];
+            // Me guardo la segunda parte que será la relacionada con el número
+            numeroObtenido = partes[1];
+            // Elimino del prefijo el +, para quedarme con el número
+            prefijoObtenido = prefijoObtenido.replace("+", "");
+            // Establezco el número obtenido al editText
+            editTele.setText(numeroObtenido);
+            // Establezco en el ccp el prefijo del pais
+            ccp.setCountryForPhoneCode(Integer.parseInt(prefijoObtenido));
+        } else { // En caso de que este vacio
+            prefijoObtenido = "";
+            numeroObtenido = "";
+        }
+
+        // Establezco en el ediText del correo el email descifrado en Base64
         editCorreo.setText(descifrarBase64(email));
+        // Establezco el editText como que no se puede modificar
         editCorreo.setEnabled(false);
 
+        // Establezco la acción de cuando pulso el botón de elegir imagen
         btnElegirImagen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -211,6 +263,7 @@ public class EditarPerfil extends AppCompatActivity {
             }
         });
 
+        // Establezco la acción de cuando pulso el botón de guardar datos
         btnGuardar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -245,13 +298,16 @@ public class EditarPerfil extends AppCompatActivity {
             }
         });
 
+        // Establezco la acción de cuando pulso el botón de elegir ubicación
         btnElegirUbicacion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Llamo al método para buscar una ubicación
                 openPlacePicker();
             }
         });
 
+        // Establezco la acciónq ue sucede cuando elijo un prefijp
         ccp.setOnCountryChangeListener(() -> {
             pais = ccp.getSelectedCountryName();
             paisCodigo = ccp.getSelectedCountryNameCode();
@@ -262,11 +318,15 @@ public class EditarPerfil extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
         });
 
+        // Establezco la acción de cuando pulso el botón de confirmar ubicación
         btnConfirmarUbicacion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Oculto los elementos que no me interesan ahora
                 imagenMapa.setVisibility(View.GONE);
                 btnConfirmarUbicacion.setVisibility(View.GONE);
+                cancelarUbi.setVisibility(View.GONE);
+                // Doy visibilidad a todos los demás elementos que si me interesan
                 btnGuardar.setVisibility(View.VISIBLE);
                 ccp.setVisibility(View.VISIBLE);
                 btnElegirImagen.setVisibility(View.VISIBLE);
@@ -276,7 +336,34 @@ public class EditarPerfil extends AppCompatActivity {
                 editNombre.setVisibility(View.VISIBLE);
                 editCorreo.setVisibility(View.VISIBLE);
                 editUbi.setVisibility(View.VISIBLE);
+                textoTitulo.setText("Editar Perfil");
+                // Lanzo un Toast notificando al usuario que se ha elegido bien la ubicación
                 showToast("Ubicación elegida");
+            }
+        });
+
+        // Establezco la acción de cuando pulso el botón de cancelar ubicación
+        cancelarUbi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Oculto los elementos que no me interesan ahora
+                imagenMapa.setVisibility(View.GONE);
+                btnConfirmarUbicacion.setVisibility(View.GONE);
+                cancelarUbi.setVisibility(View.GONE);
+                // Doy visibilidad a todos los demás elementos que si me interesan
+                btnGuardar.setVisibility(View.VISIBLE);
+                ccp.setVisibility(View.VISIBLE);
+                btnElegirImagen.setVisibility(View.VISIBLE);
+                editTele.setVisibility(View.VISIBLE);
+                imagenFotoPerfil.setVisibility(View.VISIBLE);
+                btnElegirUbicacion.setVisibility(View.VISIBLE);
+                editNombre.setVisibility(View.VISIBLE);
+                editCorreo.setVisibility(View.VISIBLE);
+                editUbi.setVisibility(View.VISIBLE);
+                editUbi.setText("");
+                textoTitulo.setText("Editar Perfil");
+                // Lanzo un Toast notificando al usuario que se ha elegido bien la ubicación
+                showToast("Ubicación Cancelada");
             }
         });
     }
@@ -285,7 +372,8 @@ public class EditarPerfil extends AppCompatActivity {
      * @param permissions
      * @param grantResults
      * @param requestCode
-     * Método en el que */
+     * Método en el que compruebo si tengo los permisos solicitados
+     * aceptados o el usuario los ha rechazado*/
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -294,45 +382,64 @@ public class EditarPerfil extends AppCompatActivity {
                     grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 showImagePickerDialog();
             } else {
-                Toast.makeText(this, "Permisos necesarios no otorgados", Toast.LENGTH_SHORT).show();
+                showToast("Permisos necesarios no otorgados");
             }
         }
     }
 
     /**
-     * Método en el que */
+     * Método en el que una vez pulsado el botón de elegir foto, le doy las opciones
+     * para que ponga una foto u otra, dependiendo la que elija, lanzo un intent, otro intent
+     * o cargo la url puesta*/
     private void showImagePickerDialog() {
-        CharSequence[] options = {"Tomar Foto", "Elegir de Galería"};
+        // Declaro las opciones que existen a la hora de elegir la foto de perfil
+        CharSequence[] options = {"Tomar Foto", "Elegir de Galería", "URL"};
 
+        // Creo un nuevo dialogo que mostrar al usuario
         new AlertDialog.Builder(EditarPerfil.this)
-                .setTitle("Elegir Imagen")
+                .setTitle("Elegir Imagen") // Establezco el titutlo
                 .setItems(options, (dialog, which) -> {
-                    if (which == 0) {
+                    // Controlo todas las posibilidades
+                    if (which == 0) { // Si elige la de tomar foto
+                        // Creo un intent para abrir la camara
                         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        // Lanzo el intent
                         cameraResult.launch(takePictureIntent);
-                    } else if (which == 1) {
+                    } else if (which == 1) { // Si elige la galeria
+                        // Creo el intent para abrir la galeria o fotos del dispositivo
                         Intent pickPhotoIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                        // Lanzo el intent
                         galleryResult.launch(pickPhotoIntent);
+                    }else if(which == 2){ // Si elige introducir una url
+                        showToast("Has elegido la URL");
                     }
                 })
-                .show();
+                .show(); // Muestro el dialogo
     }
 
     /**
-     * Método en el que*/
+     * Método en el que compruebo que todo este inicializado, en caso
+     * de no estar inicializado, le incializados y luego mediante un try catch
+     * manejo las excepciones y lanzo el intent que he declarado para cargar
+     * la ubicación*/
     private void openPlacePicker() {
-        if (!Places.isInitialized()) {
+        // Compruebo que no este inicializado el objeto Places
+        if (!Places.isInitialized()) { // En caso de que no este inicializo
+            // Incializo gracias a la key de la api de Google Maps
             Places.initialize(getApplicationContext(), getString(R.string.apiKey_Maps));
         }
-
+        // Creo una lista del objeto Place.Field para obtener la lista de id, nombre, lat y dirección de las ubicaciones
         List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS);
-
+        // Utilizo un try catch para poder controlar las excepciones
         try {
+            // Creo un intent basandome en la lista de los Place.Field para luego lanzar el itent
             Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields).build(this);
-
+            // Lanzo el Intent
             placePickerLauncher.launch(intent);
+            // Lanzo un Logcat indicnado que todo ha salido correctamente
             Log.d("PlacePicker", "Place Picker lanzado correctamente");
-        } catch (Exception e) {
+        } catch (Exception e) { // En caso de que salte alguna excepción
+            // Lanzo un Logcat indicando que ha ocurrido un error y se le paso
             Log.e("PlacePicker", "Error desconocido: " + e.getMessage());
         }
     }
@@ -340,15 +447,20 @@ public class EditarPerfil extends AppCompatActivity {
     /**
      * @return
      * @param telefonoEntero
-     * Método en el que */
+     * Método en el que compruebo si el número es valido o no, utilizo la libreria
+     * de libphonenumber para validar si los número introducidos son optimos o no, es
+     * decir si tu eliges el prefijo +34 el número intrpducido es correcto con ese prefijo*/
     public boolean isValidNumberPhone(String telefonoEntero) {
+        // Inicializo la clase PhoneNumberUtil que me servirá para comprobar el número de telefono
         PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-
+        // Utilizo un try catch para controlar si el número es valido no
         try {
+            // Procedo a parsear el telefono entero junto con el codigo del nombre del prefijo
             Phonenumber.PhoneNumber phoneNumber = phoneNumberUtil.parse(telefonoEntero, ccp.getSelectedCountryNameCode());
-
+            // Devuelvo el valor que me devuelve la llamada al método de isValidNumber de la clase PhoneNumber
             return phoneNumberUtil.isValidNumber(phoneNumber);
-        } catch (NumberParseException e) {
+        } catch (NumberParseException e) { // En caso de que surja alguna excepción
+            // Lanzo una excepción
             return false;
         }
     }
@@ -367,53 +479,103 @@ public class EditarPerfil extends AppCompatActivity {
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
 
+    /**
+     * @return
+     * @param base64String
+     * Método en el que compruebo que el parametro string
+     * no es nulo, en caso de ser nulo devuelvo nada, en caso de no ser
+     * nulo con un try catch decodifico el string y lo transformo en
+     * un bitmap que luego cargue en la imagen*/
     private Bitmap convertirBase64ABitmap(String base64String) {
-        if (base64String == null || base64String.isEmpty()) {
+        // Compruebo que el string del parametro no sea nulo ni este vacio
+        if (base64String == null || base64String.isEmpty()) { // En caso de que sea nulo
+            // Retorno nulo
             return null;
         }
+        // Utilizo un try catch para decodificar y convertir a bitmap
         try {
+            // Intento decodificar los bytes del parametro pasado con el Base64 por defecto
             byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+            // Retorno el bitmap decodificado
             return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) { // En caso de que surja alguna excepción
+            // Printo la excepción
             e.printStackTrace();
+            // Devuelvo nulo
             return null;
         }
     }
 
+    /**
+     * @return
+     * @param dato
+     * Método en el que cifro el string del parametro que paso en
+     * formato base64*/
     private String cifrarBase64(String dato) {
+        // Devuelvo el string codificado en base64
         return Base64.encodeToString(dato.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
     }
 
+    /**
+     * @return
+     * @param datoCifrado
+     * Método en el que le paso un string cifrado en base64
+     * y procedo a descrifrar los datos del parametro pasado*/
     private String descifrarBase64(String datoCifrado) {
+        // Intento decodificar los bytes del parametro pasado con el Base64 por defecto
         byte[] decodedBytes = Base64.decode(datoCifrado, Base64.DEFAULT);
+        // Retornor el string descrifrado
         return new String(decodedBytes, StandardCharsets.UTF_8);
     }
 
+    /**
+     * @param uid
+     * Método para obtener los datos del usuario desde la base de datos local,
+     * primero que todo obtengo el cursor del usuario compruebo que no este nulo y
+     * obtengo en un string el valor de la imagen pasado a texto, compruebo que no sea nulo
+     * convierto el texto de base64 a bitmap y lo establezco en el elemento de la imagen, obtengo
+     * obtengo todos los datos y sino pongo ""*/
     @SuppressLint("Range")
     public void obtenerDatosUsuario(String uid) {
+        // Obtengo el cursor de la base de datos local
         Cursor cursor = usersDB.obtenerUsuarioPorUid(uid);
 
-        if (cursor != null && cursor.moveToFirst()) {
+        // Compruebo que el cursor no sea nulo
+        if (cursor != null && cursor.moveToFirst()) { // En caso de que no sea nulo
+            // Obtengo en una variable de tipo string la imagen en texto
             String base64Imagen = cursor.isNull(cursor.getColumnIndex("imagen")) ? "" : cursor.getString(cursor.getColumnIndex("imagen"));
-            if (!base64Imagen.isEmpty()) {
+            // Compruebo que el string no sea nulo
+            if (!base64Imagen.isEmpty()) { // En caso de no ser nulo
+                // Creo un bitmap y paso el string de base64 a bitmap
                 Bitmap imagenPerfil = convertirBase64ABitmap(base64Imagen);
-                if (imagenPerfil != null) {
+                // Compruebo que el bitmap no sea nulo
+                if (imagenPerfil != null) { // En caso de no ser nulo
+                    // Establezco el bitmap de la imagen
                     imagenFotoPerfil.setImageBitmap(imagenPerfil);
-                } else {
+                } else { // En caso de ser nulo
+                    // Lanzo un Logcat indicando que no se pudo convertir la imagen
                     Log.e("Imagen", "No se pudo convertir la imagen");
                 }
-            } else {
+            } else { // En caso de que no haya nada guardado
+                // Lanzo un Logcat indicnado que no hay imagenes guardadas en la bd
                 Log.d("Imagen", "No hay imagen guardada en la BD");
             }
+            // Obtengo el nombre
             nombre = cursor.isNull(cursor.getColumnIndex("displayName")) ? "" : cursor.getString(cursor.getColumnIndex("displayName"));
+            // Obtengo el email
             email = cursor.isNull(cursor.getColumnIndex("email")) ? "" : cursor.getString(cursor.getColumnIndex("email"));
+            // Obtengo el número
             numeroStr = cursor.isNull(cursor.getColumnIndex("number")) ? "" : cursor.getString(cursor.getColumnIndex("number"));
+            // Obtengo la ubicacion
             ubicacionStr = cursor.isNull(cursor.getColumnIndex("ubi")) ? "" : cursor.getString(cursor.getColumnIndex("ubi"));
-        } else {
+        } else { // En caso de que el cursor sea nulo
+            // Lanzo un Logcat indicnado que no se ha podido encontrar el usuario con uid
             Log.d("Usuario", "No se encontró el usuario con UID: " + uid);
         }
 
-        if (cursor != null) {
+        // Compruebo si el cursor sigue teniendo datos
+        if (cursor != null) { // Si es asi
+            // Cierro el cursor
             cursor.close();
         }
     }
