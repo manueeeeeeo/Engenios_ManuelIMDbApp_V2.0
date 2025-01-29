@@ -1,10 +1,11 @@
 package com.clase.engenios_manuelimdbapp_v20.sync;
 
+import android.annotation.SuppressLint;
+import android.database.Cursor;
 import android.util.Log;
 
-import com.clase.engenios_manuelimdbapp_v20.models.ActivityLog;
+import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -16,9 +17,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * @author Manuel
+ * @version 1.0*/
+
 public class UsersSync {
     private FirebaseFirestore db = null; // Variable para manejar la base de datos de Firestore
     private CollectionReference usersCollection = null; // Variable para guardar la referencia de la colección que vamos a usar
+    private DatabaseUsers userBD = null; // Variable para manejar la base de datos local
 
     /**
      * Contructor en donde inicializo la base de datos de Firestore,
@@ -176,6 +182,106 @@ public class UsersSync {
                 .addOnFailureListener(e -> { // En caso de que algo vaya mal
                     Log.d("Lista_Logs", "Error: "+e.getMessage());
                 });
+    }
+
+    public void agregarDatosExtras(String uid, String name, String emailCodificado, String numeroCodificado, String fotoPerfil, String ubicacion, boolean cambiarNomnbre){
+        // Declaro el map que voy a usar para darle formato en el NO SQL
+        Map<String, Object> userData = new HashMap<>();
+        // Introduzco la clave y el valor del email codificado de la cuenta
+        userData.put("email", emailCodificado);
+        // Introduzco la clave y el valor del uid de la cuenta
+        userData.put("user_uid", uid);
+        // Introduzco la clave y el valor de la ubicacion de la cuenta
+        userData.put("ubication", ubicacion);
+        // Introduzco la clave y el valor de la foto de perfil de la cuenta
+        userData.put("imagen_Perfil", fotoPerfil);
+        // Introduzco la clave y el valor del numero codificado de la cuenta
+        userData.put("number_phone", numeroCodificado);
+
+        if(!cambiarNomnbre){
+            // Hago referencia a la coleeción elegido y además uso el merge() para no sobrescribir campos existentes, solo actualizar
+            // los deseados
+            usersCollection.document(uid).set(userData, SetOptions.merge())
+                    .addOnSuccessListener(aVoid -> { // En caso de que todo salga bien
+                        Log.d("login_register", "Registrado correctamente");
+                    })
+                    .addOnFailureListener(e -> { // En caso de que algo falle
+                        Log.d("login_register", "No registrado correctamente ha ocurrido el siguiente error: "+ e.getMessage());
+                    });
+        }else{
+            // Introduzco la clave y el valor del nombre de la cuenta
+            userData.put("displayName", name);
+            // Hago referencia a la coleeción elegido y además uso el merge() para no sobrescribir campos existentes, solo actualizar
+            // los deseados
+            usersCollection.document(uid).set(userData, SetOptions.merge())
+                    .addOnSuccessListener(aVoid -> { // En caso de que todo salga bien
+                        Log.d("login_register", "Registrado correctamente");
+                    })
+                    .addOnFailureListener(e -> { // En caso de que algo falle
+                        Log.d("login_register", "No registrado correctamente ha ocurrido el siguiente error: "+ e.getMessage());
+                    });
+        }
+    }
+
+    public void sincronizarFirestoreConLocal(String uid) {
+        // Escuchar cambios en Firestore y sincronizar con la base de datos local
+        usersCollection.document(uid).addSnapshotListener((snapshot, error) -> {
+            if (error != null) {
+                Log.e("FirestoreSync", "Error al escuchar cambios: " + error.getMessage());
+                return;
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                // Obtener datos de Firestore
+                String nombre = snapshot.getString("displayName");
+                String email = snapshot.getString("email");
+                String numero = snapshot.getString("number_phone");
+                String ubicacion = snapshot.getString("ubication");
+                String imagenPerfil = snapshot.getString("imagen_Perfil");
+
+                // Guardar datos en la base de datos local
+                //userBD.actualizarUsuario(uid, nombre, email, numero, ubicacion, imagenPerfil);
+                Log.d("FirestoreSync", "Datos sincronizados con la base de datos local.");
+            } else {
+                Log.w("FirestoreSync", "Documento Firestore no encontrado.");
+            }
+        });
+    }
+
+    public void guardarDatosEnLocal(String uid) {
+        // Obtener datos desde Firestore para sincronizar con la base de datos local
+        usersCollection.document(uid).get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        String nombre = snapshot.getString("displayName");
+                        String email = snapshot.getString("email");
+                        String numero = snapshot.getString("number_phone");
+                        String ubicacion = snapshot.getString("ubication");
+                        String imagenPerfil = snapshot.getString("imagen_Perfil");
+
+                        if(!numero.isEmpty()){
+                            userBD.insertarUsuario(uid, nombre, email);
+                            return;
+                        }
+
+                        if(!ubicacion.isEmpty()){
+                            userBD.insertarUsuario(uid, nombre, email);
+                            return;
+                        }
+
+                        if(!imagenPerfil.isEmpty()){
+                            userBD.insertarUsuario(uid, nombre, email);
+                            return;
+                        }
+
+                        // Guardar datos en la base de datos local
+                        userBD.insetarUsuarioConTodosLosDatos(uid, nombre, email, ubicacion, numero, imagenPerfil);
+                        Log.d("FirestoreSync", "Datos guardados en la base de datos local.");
+                    } else {
+                        Log.w("FirestoreSync", "Documento Firestore no encontrado.");
+                    }
+                })
+                .addOnFailureListener(e -> Log.e("FirestoreSync", "Error al obtener datos: " + e.getMessage()));
     }
 
 
