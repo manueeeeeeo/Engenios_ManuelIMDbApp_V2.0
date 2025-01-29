@@ -10,6 +10,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * @author Manuel
+ * @version 1.0*/
+
 public class DatabaseUsers extends SQLiteOpenHelper {
     // Declaro todas las variables necesarias para está clase
     private static final String DATABASE_NAME = "users.db"; // Nombre de la base de datos
@@ -43,7 +47,7 @@ public class DatabaseUsers extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         // Creo la tabla de los usuarios
-        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
+        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" // Establezco el nombre de la tabla
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " // Genero la columna del id
                 + COLUMN_UID + " TEXT NOT NULL UNIQUE, " // Genero la columna del uid
                 + COLUMN_NAME + " TEXT NOT NULL, " // Genero la columna del nombre
@@ -176,6 +180,29 @@ public class DatabaseUsers extends SQLiteOpenHelper {
         }
         // Realiza la actualización de las dos columnas del usuario
         db.update(DatabaseUsers.TABLE_NAME, values, DatabaseUsers.COLUMN_UID + "=?", new String[]{uid});
+        // Cierro la base de datos
+        db.close();
+    }
+
+    public void insetarUsuarioConTodosLosDatos(String uid, String name, String email, String ubi, String numero, String imagen){
+        // Creo el objeto de la bd local y lo incializo para así poder agregar cosas
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Utilizo el contentValues para para poder crear un objeto e insertarlo en la bd local
+        ContentValues values = new ContentValues();
+        // Establezco el nombre de la columna y el valor a insertar
+        values.put(COLUMN_UID, uid);
+        // Establezco el nombre de la columna y el valor a insertar
+        values.put(COLUMN_NAME, name);
+        // Establezco el nombre de la columna y el valor a insertar
+        values.put(COLUMN_EMAIL, email);
+        // Asigno los valores a la columna para la actualización
+        values.put(DatabaseUsers.COLUMN_UBICACION, ubi);
+        // Asigno los valores a la columna para la actualización
+        values.put(DatabaseUsers.COLUMN_NUMERO, numero);
+        // Asigno los valores a la columna para la actualización
+        values.put(DatabaseUsers.COLUMN_IMAGEN_PERFIL, imagen);
+        // Realiza la actualización de las dos columnas del usuario
+        db.insert(TABLE_NAME, null, values);
         // Cierro la base de datos
         db.close();
     }
