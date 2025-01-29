@@ -31,6 +31,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.model.LatLng;
@@ -94,6 +95,7 @@ public class EditarPerfil extends AppCompatActivity {
     private DatabaseUsers usersDB = null; // Variable que sirve para manejar la base de datos local de los usuarios
     private FirebaseAuth auth = null; // Variable que sirve para manejar la autentificación de los usuarios
     private FirebaseFirestore db = null; // Variable que sirve para manejar la base de datos en la nube de los usuarios
+    private UsersSync sincronizarUsers = null;
 
     private static final int PERMISSION_REQUEST_CODE = 100; // Variable para manejar los permisos del usuario
 
@@ -187,6 +189,8 @@ public class EditarPerfil extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         // Inicializo la base de datos local
         usersDB = new DatabaseUsers(this);
+        // Inicializo la base de datos en la nube
+        sincronizarUsers = new UsersSync();
 
         // Obtengo el uid del usuario y lo guardo en una variable
         uid = auth.getCurrentUser().getUid();
@@ -277,10 +281,12 @@ public class EditarPerfil extends AppCompatActivity {
                             usersDB.guardarImagenEnBaseDeDatos(imagenBase64, uid);
                             if(editNombre.getText().toString().equals(auth.getCurrentUser().getDisplayName())){
                                 usersDB.actualizarUsuario(uid, editUbi.getText().toString(), cifrarBase64(numeroCompleto), null, false);
+                                sincronizarUsers.agregarDatosExtras(uid, null, cifrarBase64(editCorreo.getText().toString()), cifrarBase64(numeroCompleto), imagenBase64,editUbi.getText().toString(), false);
                                 showToast("Usuario actualizado correctamente");
                                 finish();
                             }else{
                                 usersDB.actualizarUsuario(uid, editUbi.getText().toString(), cifrarBase64(numeroCompleto), editNombre.getText().toString(), true);
+                                sincronizarUsers.agregarDatosExtras(uid, editNombre.getText().toString(), cifrarBase64(editCorreo.getText().toString()), cifrarBase64(numeroCompleto), imagenBase64,editUbi.getText().toString(), true);
                                 showToast("Usuario actualizado correctamente");
                                 finish();
                             }
