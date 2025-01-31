@@ -22,7 +22,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
     // Handler y Runnable para gestionar el cierre de sesión automático tras un tiempo de inactividad
     private Handler logoutHandler = null;
     private Runnable logoutRunnable = null;
-    private static final long LOGOUT_DELAY = 30000; // Variable para el delay del logout
+    private static final long LOGOUT_DELAY = 1000; // Variable para el delay del logout
     private SharedPreferences preferences = null; // Variable para manejar las preferencias del usuario
     private DatabaseUsers databaseUsers = null; // Variable para la manejar la bd de los ususarios locales
     private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
@@ -40,7 +40,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
         // Incilizo la base de datos locales de ususarios
         databaseUsers = new DatabaseUsers(this);
         // Inicializo la base de datos en la nube
-        sincronizacionUsuarios = new UsersSync();
+        sincronizacionUsuarios = new UsersSync(this);
         logoutHandler = new Handler(); // Inicializo el Handler de la app
         logoutRunnable = () -> registerUserLogout(); // Llamo al método para registrar el logout del usuario
 
@@ -182,7 +182,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
     @Override
     public void onTrimMemory(int level) {
         // Compruebo que el nivel de recorte de la memoria indica que la UI se ha ocutlado o pasado a segundo plano
-        if (level == TRIM_MEMORY_UI_HIDDEN) {
+        if (level == TRIM_MEMORY_UI_HIDDEN || level >= TRIM_MEMORY_RUNNING_CRITICAL) {
             // Registro logout si la UI se minimiza
             registerUserLogout();
         }
