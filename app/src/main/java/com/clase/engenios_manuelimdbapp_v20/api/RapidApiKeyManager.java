@@ -51,13 +51,4 @@ public class RapidApiKeyManager {
         // Obtengo la nueva key de la api ciclando entre las claves
         currentKeyIndex = (currentKeyIndex + 1) % apiKeys.size();
     }
-
-    /**
-     * @return
-     * Método en el que devuelvo el número
-     * de tamaño de la lista de las keys apis*/
-    public int getTotalKeys() {
-        // Obtengo el tamaño de la lista de apisKeys
-        return apiKeys.size();
-    }
 }
