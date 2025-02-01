@@ -613,7 +613,7 @@ public class Inicio extends AppCompatActivity {
                             sincronizarUsers.guardarDatosEnLocal(user.getUid());
                         } else {
                             // Guardar en la base de datos local (SQLite)
-                            nombre = "Desconido";
+                            nombre = user.getDisplayName();
                             email = cifrarBase64(user.getEmail());
                             // Guardar en la base de datos local
                             userdb.insertarOActualizarUsuario(user.getUid(), nombre, email);
@@ -624,7 +624,7 @@ public class Inicio extends AppCompatActivity {
                         // Redirigir al MainActivity solo después de obtener la imagen
                         Intent intent = new Intent(Inicio.this, MainActivity.class);
                         intent.putExtra("uidUs", user.getUid());
-                        intent.putExtra("name", "Desconocido");
+                        intent.putExtra("name", user.getDisplayName());
                         intent.putExtra("photoUrl", "");
                         intent.putExtra("message", "Conectado por otro método");
                         intent.putExtra("email", user.getEmail());
