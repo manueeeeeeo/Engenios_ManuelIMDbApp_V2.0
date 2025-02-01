@@ -18,6 +18,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Manuel
+ * @version 1.0*/
+
 public class FavoriteSync {
     // Variables necesarias para la clase
     private final FirebaseFirestore db; // Variable para gestionar la bd de Firestore

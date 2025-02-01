@@ -16,7 +16,7 @@ import java.util.List;
 
 public class FavoriteMoviesDatabase extends SQLiteOpenHelper {
     // Declaro todas las variables necesarias para la clase
-    private static final String DATABASE_NAME = "favorites.db"; // Nombre de la base de datos
+    private static final String DATABASE_NAME = "users.db"; // Nombre de la base de datos
     private static final int DATABASE_VERSION = 5; // Versión de la base de datos
     private static final String TABLE_NAME = "favorites"; // Nombre de la tabla de la base de datos
 
@@ -46,7 +46,7 @@ public class FavoriteMoviesDatabase extends SQLiteOpenHelper {
      * que viene siendo la consulta que tenmos desarrollada en el String*/
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Guardamos en una variable la consulta que es la creación de una nueva tabla con todos sus datos
+        /*// Guardamos en una variable la consulta que es la creación de una nueva tabla con todos sus datos
         String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_MOVIE_ID + " TEXT NOT NULL, "
@@ -58,7 +58,7 @@ public class FavoriteMoviesDatabase extends SQLiteOpenHelper {
                 +COLUMN_EMAIL_USER + " TEXT NOT NULL "
                 + ")";
         // Procedemos a ejecutar la sentencia SQL
-        db.execSQL(CREATE_TABLE);
+        db.execSQL(CREATE_TABLE);*/
     }
 
     /**
