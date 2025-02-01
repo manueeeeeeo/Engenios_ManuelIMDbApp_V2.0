@@ -182,7 +182,7 @@ public class AppLifecycleManager extends Application implements Application.Acti
     @Override
     public void onTrimMemory(int level) {
         // Compruebo que el nivel de recorte de la memoria indica que la UI se ha ocutlado o pasado a segundo plano
-        if (level == TRIM_MEMORY_UI_HIDDEN || level >= TRIM_MEMORY_RUNNING_CRITICAL) {
+        if (level == TRIM_MEMORY_UI_HIDDEN) {
             // Registro logout si la UI se minimiza
             registerUserLogout();
         }
