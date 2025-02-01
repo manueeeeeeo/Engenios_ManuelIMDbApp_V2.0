@@ -621,6 +621,7 @@ public class Inicio extends AppCompatActivity {
                             sincronizarUsers.agregarOActualizarUsuario(user.getUid(), nombre, email);
                         }
 
+                        registerUserLogin();
                         // Redirigir al MainActivity solo después de obtener la imagen
                         Intent intent = new Intent(Inicio.this, MainActivity.class);
                         intent.putExtra("uidUs", user.getUid());
@@ -637,8 +638,8 @@ public class Inicio extends AppCompatActivity {
                     }
 
                     // Registrar el inicio de sesión y continuar
-                    registerUserLogin();
-                    sincronizarUsers.guardarDatosEnLocal(user.getUid());
+                    //registerUserLogin();
+                    //sincronizarUsers.guardarDatosEnLocal(user.getUid());
                 });
 
             } else { // En caso de que sea otro
