@@ -10,6 +10,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Log;
@@ -41,6 +43,7 @@ import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -190,7 +193,7 @@ public class EditarPerfil extends AppCompatActivity {
         // Inicializo la base de datos local
         usersDB = new DatabaseUsers(this);
         // Inicializo la base de datos en la nube
-        sincronizarUsers = new UsersSync();
+        sincronizarUsers = new UsersSync(this);
 
         // Obtengo el uid del usuario y lo guardo en una variable
         uid = auth.getCurrentUser().getUid();
@@ -234,6 +237,7 @@ public class EditarPerfil extends AppCompatActivity {
                 String[] partes = numeroDescifrado.split(" ", 2);
                 // Me guardo la primera parte que será la relacionada con el prefijo
                 prefijoObtenido = partes[0];
+                prefijo = prefijoObtenido;
                 // Me guardo la segunda parte que será la relacionada con el número
                 numeroObtenido = partes[1];
                 // Elimino del prefijo el +, para quedarme con el número
@@ -245,6 +249,7 @@ public class EditarPerfil extends AppCompatActivity {
             }
         }
 
+        editUbi.setEnabled(false);
         // Establezco en el ediText del correo el email descifrado en Base64
         editCorreo.setText(descifrarBase64(email));
         // Establezco el editText como que no se puede modificar
@@ -270,34 +275,48 @@ public class EditarPerfil extends AppCompatActivity {
         btnGuardar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Obtengo en una variable el telefono del editText
                 String telefono = editTele.getText().toString().trim();
 
-                if (isValidNumberPhone(telefono)) {
+                // Compruebo que sea un número valido
+                if (isValidNumberPhone(telefono)) { // Si lo es
                     if(!editNombre.getText().toString().isEmpty() || !editTele.getText().toString().isEmpty() ||
                     !editUbi.getText().toString().isEmpty()){
-                        if(selectedImage!=null){
-                            String imagenBase64 = convertirImagenABase64(selectedImage);
+                            String imagenGuardar = null;
+
+                            if(urlPhoto != null && !urlPhoto.isEmpty()) { // Si es una URL
+                                imagenGuardar = urlPhoto;
+                            }else if (selectedImage != null){
+                                imagenGuardar = convertirImagenABase64(selectedImage);
+                            }else{
+                                showToast("Elija una imagen para poner en su perfil");
+                                return;
+                            }
                             String numeroCompleto = prefijo+" "+editTele.getText().toString();
-                            usersDB.guardarImagenEnBaseDeDatos(imagenBase64, uid);
+                            usersDB.guardarImagenEnBaseDeDatos(imagenGuardar, uid);
                             if(editNombre.getText().toString().equals(auth.getCurrentUser().getDisplayName())){
                                 usersDB.actualizarUsuario(uid, editUbi.getText().toString(), cifrarBase64(numeroCompleto), null, false);
-                                sincronizarUsers.agregarDatosExtras(uid, null, cifrarBase64(editCorreo.getText().toString()), cifrarBase64(numeroCompleto), imagenBase64,editUbi.getText().toString(), false);
-                                showToast("Usuario actualizado correctamente");
-                                finish();
+                                sincronizarUsers.agregarDatosExtras(uid, null, cifrarBase64(editCorreo.getText().toString()), cifrarBase64(numeroCompleto), imagenGuardar,editUbi.getText().toString(), false);
+                                showToast("Usuario actualizado correctamente. Volviendo al Main!!");
+                                FirebaseUser user = auth.getCurrentUser();
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    finish();
+                                }, 2000);
                             }else{
                                 usersDB.actualizarUsuario(uid, editUbi.getText().toString(), cifrarBase64(numeroCompleto), editNombre.getText().toString(), true);
-                                sincronizarUsers.agregarDatosExtras(uid, editNombre.getText().toString(), cifrarBase64(editCorreo.getText().toString()), cifrarBase64(numeroCompleto), imagenBase64,editUbi.getText().toString(), true);
-                                showToast("Usuario actualizado correctamente");
-                                finish();
+                                sincronizarUsers.agregarDatosExtras(uid, editNombre.getText().toString(), cifrarBase64(editCorreo.getText().toString()), cifrarBase64(numeroCompleto), imagenGuardar,editUbi.getText().toString(), true);
+                                showToast("Usuario actualizado correctamente. Volviendo al Main!!");
+                                FirebaseUser user = auth.getCurrentUser();
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    finish();
+                                }, 2000);
                             }
-                        }else{
-                            showToast("Eliga una imagen para poner en su perfil");
-                        }
-                    }else{
+                    }else{ // En caso de que haya algun campo vacio
+                        // Lanzo un Toast al usuario indicandoselo
                         showToast("Existen campos vacios");
                     }
-                } else {
-                    // Número no válido
+                } else { // Si no e sun número valido
+                    // Lanzo un Toast indicandoselo al usuario
                     showToast("Número de telefono no válido");
                 }
             }
@@ -524,6 +543,7 @@ public class EditarPerfil extends AppCompatActivity {
             throw new IllegalArgumentException("La URL no tiene un formato válido: " + url, e);
         }
 
+        urlPhoto = url;
         // Utilizo picasso para cargar la imagen en el elemento de imageview
         Picasso.get()
                 .load(url) // URL de la imagen
@@ -541,7 +561,7 @@ public class EditarPerfil extends AppCompatActivity {
      * guarde en la bd local*/
     private String convertirImagenABase64(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream); // Usar JPEG con calidad ajustada
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
@@ -613,15 +633,25 @@ public class EditarPerfil extends AppCompatActivity {
             String base64Imagen = cursor.isNull(cursor.getColumnIndex("imagen")) ? "" : cursor.getString(cursor.getColumnIndex("imagen"));
             // Compruebo que el string no sea nulo
             if (!base64Imagen.isEmpty()) { // En caso de no ser nulo
-                // Creo un bitmap y paso el string de base64 a bitmap
-                Bitmap imagenPerfil = convertirBase64ABitmap(base64Imagen);
-                // Compruebo que el bitmap no sea nulo
-                if (imagenPerfil != null) { // En caso de no ser nulo
-                    // Establezco el bitmap de la imagen
-                    imagenFotoPerfil.setImageBitmap(imagenPerfil);
-                } else { // En caso de ser nulo
-                    // Lanzo un Logcat indicando que no se pudo convertir la imagen
-                    Log.e("Imagen", "No se pudo convertir la imagen");
+                if(base64Imagen.startsWith("http")){
+                    urlPhoto = base64Imagen;
+                    Picasso.get()
+                            .load(urlPhoto) // URL de la imagen
+                            .resize(800, 800) // Redimensiona la imagen a un tamaño adecuado (ajustar según tus necesidades)
+                            .centerCrop() // Asegura que la imagen se recorte y se ajuste correctamente al ImageView
+                            .into(imagenFotoPerfil); // Coloca la imagen cargada en el ImageView
+                }else{
+                    // Creo un bitmap y paso el string de base64 a bitmap
+                    Bitmap imagenPerfil = convertirBase64ABitmap(base64Imagen);
+                    // Compruebo que el bitmap no sea nulo
+                    if (imagenPerfil != null) { // En caso de no ser nulo
+                        // Establezco el bitmap de la imagen
+                        imagenFotoPerfil.setImageBitmap(imagenPerfil);
+                        selectedImage = imagenPerfil;
+                    } else { // En caso de ser nulo
+                        // Lanzo un Logcat indicando que no se pudo convertir la imagen
+                        Log.e("Imagen", "No se pudo convertir la imagen");
+                    }
                 }
             } else { // En caso de que no haya nada guardado
                 // Lanzo un Logcat indicnado que no hay imagenes guardadas en la bd
