@@ -21,13 +21,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.annotation.NonNull;
@@ -41,9 +39,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.clase.engenios_manuelimdbapp_v20.databinding.ActivityMainBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Manuel
@@ -241,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Configurar el NavigationController
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                R.id.nav_top10, R.id.nav_favorites, R.id.nav_buscar)
                 .setOpenableLayout(drawer)
                 .build();
 

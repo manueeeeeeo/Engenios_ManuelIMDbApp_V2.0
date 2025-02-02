@@ -1,23 +1,21 @@
-package com.clase.engenios_manuelimdbapp_v20.ui.home;
+package com.clase.engenios_manuelimdbapp_v20.ui.top10;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clase.engenios_manuelimdbapp_v20.adapters.MovieAdapters;
 import com.clase.engenios_manuelimdbapp_v20.api.IMDBApiClient;
 import com.clase.engenios_manuelimdbapp_v20.api.IMDBApiService;
-import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentHomeBinding;
+import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentTop10Binding;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.clase.engenios_manuelimdbapp_v20.models.MovieOverviewResponse;
 import com.clase.engenios_manuelimdbapp_v20.models.PopularMovieResponse;
@@ -38,9 +36,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * @author Manuel
  * @version 1.0*/
 
-public class HomeFragment extends Fragment {
+public class ViewTop10 extends Fragment {
 
-    private FragmentHomeBinding binding;
+    private FragmentTop10Binding binding;
     private RecyclerView recyclerView; // Variable que nos permite manejar el RecyclerView de la interfaz
     private MovieAdapters adapter; // Variable que hace referencia al adaptador para el recycler de las películas
     private List<Movie> movieList = new ArrayList<>(); // Variable inicializada de la lista de películas
@@ -52,7 +50,7 @@ public class HomeFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        binding = FragmentTop10Binding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         // Limpio la lista de películas al iniciar el HomeFragment para evitar posibles errores y duplicaciones

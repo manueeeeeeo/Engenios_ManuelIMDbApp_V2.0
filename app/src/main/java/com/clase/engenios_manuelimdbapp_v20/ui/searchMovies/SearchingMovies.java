@@ -1,4 +1,4 @@
-package com.clase.engenios_manuelimdbapp_v20.ui.slideshow;
+package com.clase.engenios_manuelimdbapp_v20.ui.searchMovies;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,21 +8,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.clase.engenios_manuelimdbapp_v20.MovieListActivity;
 import com.clase.engenios_manuelimdbapp_v20.R;
-import com.clase.engenios_manuelimdbapp_v20.adapters.MovieAdapters;
 import com.clase.engenios_manuelimdbapp_v20.adapters.SpinnerGeneroAdapter;
 import com.clase.engenios_manuelimdbapp_v20.api.TMDBApiService;
-import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentSlideshowBinding;
+import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentSearchmoviesBinding;
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -43,9 +39,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * @author Manuel
  * @version 1.0*/
 
-public class SlideshowFragment extends Fragment {
+public class SearchingMovies extends Fragment {
     // Declaro las variables necesarias para la clase
-    private FragmentSlideshowBinding binding=null;
+    private FragmentSearchmoviesBinding binding=null;
     private EditText busqueda = null; // Variable que representa el editText donde metemos el año para filtrar las películas
     private Button botonBuscar = null; // Variable que representa el botón de buscar película
     private Spinner spinnerGenero = null; // Variable que representa el spinner de categorias de películas
@@ -58,7 +54,7 @@ public class SlideshowFragment extends Fragment {
         SlideshowViewModel slideshowViewModel =
                 new ViewModelProvider(this).get(SlideshowViewModel.class);
 
-        binding = FragmentSlideshowBinding.inflate(inflater, container, false);
+        binding = FragmentSearchmoviesBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         NavigationView navigationView = getActivity().findViewById(R.id.nav_view);

@@ -1,4 +1,4 @@
-package com.clase.engenios_manuelimdbapp_v20.ui.gallery;
+package com.clase.engenios_manuelimdbapp_v20.ui.favoriteList;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,26 +24,23 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.clase.engenios_manuelimdbapp_v20.adapters.FavoriteAdapters;
-import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentGalleryBinding;
+import com.clase.engenios_manuelimdbapp_v20.databinding.FragmentFavoritelistBinding;
 import com.clase.engenios_manuelimdbapp_v20.models.FavoriteMoviesDatabase;
 import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.clase.engenios_manuelimdbapp_v20.sync.FavoriteSync;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Manuel
  * @version 1.0*/
 
-public class GalleryFragment extends Fragment {
+public class FavoriteMoviesList extends Fragment {
 
-    private FragmentGalleryBinding binding;
+    private FragmentFavoritelistBinding binding;
     private RecyclerView recy = null; // Variable que hace referencia al RecyclerView
     private Button botonCompartir = null; // Variable para el control del botón de compartir lista de favoritos
     private Toast mensajeToast = null; // Variable para manejar los Toast del fragmento
@@ -78,7 +74,7 @@ public class GalleryFragment extends Fragment {
         GalleryViewModel galleryViewModel =
                 new ViewModelProvider(this).get(GalleryViewModel.class);
 
-        binding = FragmentGalleryBinding.inflate(inflater, container, false);
+        binding = FragmentFavoritelistBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         // Obtengo el componente de tipo recyclerView de la interfaz
         recy = (RecyclerView) binding.recycle2;
