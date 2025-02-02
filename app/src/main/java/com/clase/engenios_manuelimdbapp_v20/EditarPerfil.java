@@ -111,6 +111,7 @@ public class EditarPerfil extends AppCompatActivity {
                         Bitmap photo = (Bitmap) data.getExtras().get("data");
                         imagenFotoPerfil.setImageBitmap(photo);
                         selectedImage = photo;
+                        urlPhoto = null;
                     }
                 }
             });
@@ -123,10 +124,10 @@ public class EditarPerfil extends AppCompatActivity {
                     if (data != null) {
                         Uri imageUri = data.getData();
                         imagenFotoPerfil.setImageURI(imageUri);
-
                         try {
                             Bitmap photo = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
                             selectedImage = photo;
+                            urlPhoto = null;
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -665,6 +666,8 @@ public class EditarPerfil extends AppCompatActivity {
             numeroStr = cursor.isNull(cursor.getColumnIndex("number")) ? "" : cursor.getString(cursor.getColumnIndex("number"));
             // Obtengo la ubicacion
             ubicacionStr = cursor.isNull(cursor.getColumnIndex("ubi")) ? "" : cursor.getString(cursor.getColumnIndex("ubi"));
+
+            cursor.close();
         } else { // En caso de que el cursor sea nulo
             // Lanzo un Logcat indicnado que no se ha podido encontrar el usuario con uid
             Log.d("Usuario", "No se encontró el usuario con UID: " + uid);
