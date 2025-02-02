@@ -73,7 +73,6 @@ public class EditarPerfil extends AppCompatActivity {
     private Button btnElegirUbicacion = null; // Variable para controlar el botón de elegir la ubicación
     private Button btnConfirmarUbicacion = null; // Variable para controlar el botón de confirmar la ubicación
     private CountryCodePicker ccp = null; // Variable para controlar el spinner que muestra todos los prefijos
-    private SharedPreferences sharedPreferences = null; // Variable para manejar las preferencias del usuario
     private ImageView imagenFotoPerfil = null; // Variable para manejar la imagen de la foto de perfil nueva
     private Toast mensajeToast = null; // Variable para manejar todos los toast de esta actividad
     private Bitmap selectedImage = null; // Variable de tipo Bitmap para manejar la imagen elegida o sacada
