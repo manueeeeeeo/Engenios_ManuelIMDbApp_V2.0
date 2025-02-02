@@ -10,6 +10,7 @@ import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -782,47 +783,64 @@ public class Inicio extends AppCompatActivity {
     }
 
     /**
+     * @param email
+     * @return
+     * Método en donde le pasamos un supuesto email y nos devuelve un booleando
+     * indicandonos si el supuesto email respeta o no la estructura que siguen
+     * los correos electronicos*/
+    public static boolean isValidEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return false;
+        }
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    /**
      * @param correo
      * @param clave
      * Método para registrar la cuenta en
      * la autentificación en el proveedor de
      * correo y clave*/
     private void registrarseConCorreo(String correo, String clave) {
-        // Llamo al submétodo del auth para iniciar con el email y contraseña
-        auth.createUserWithEmailAndPassword(correo, clave)
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        // En caso de que se complete la acción, compruebo de que todo vaya bien
-                        if (task.isSuccessful()) { // En caso de que todo vaya bien
-                            // Obtengo el usuario recién creado
-                            FirebaseUser user = auth.getCurrentUser();
+        if(isValidEmail(correo)){
+            // Llamo al submétodo del auth para iniciar con el email y contraseña
+            auth.createUserWithEmailAndPassword(correo, clave)
+                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            // En caso de que se complete la acción, compruebo de que todo vaya bien
+                            if (task.isSuccessful()) { // En caso de que todo vaya bien
+                                // Obtengo el usuario recién creado
+                                FirebaseUser user = auth.getCurrentUser();
 
-                            // Aquí establezco el displayName predefinido
-                            if (user != null) {
-                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                        .setDisplayName("Desconocido")
-                                        .build();
+                                // Aquí establezco el displayName predefinido
+                                if (user != null) {
+                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                            .setDisplayName("Desconocido")
+                                            .build();
 
-                                // Actualizo el perfil del usuario con el displayName
-                                user.updateProfile(profileUpdates)
-                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    showToast("Registro exitoso, Inicie Sesión!!");
-                                                } else {
-                                                    showToast("Error al actualizar el nombre de usuario: " + task.getException().getMessage());
+                                    // Actualizo el perfil del usuario con el displayName
+                                    user.updateProfile(profileUpdates)
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        showToast("Registro exitoso, Inicie Sesión!!");
+                                                    } else {
+                                                        showToast("Error al actualizar el nombre de usuario: " + task.getException().getMessage());
+                                                    }
                                                 }
-                                            }
-                                        });
+                                            });
+                                }
+                            } else { // En caso de que falle algo
+                                // Lanzo un toast diciendo el error que ha ocurddio
+                                showToast("Error en el registro: " + task.getException().getMessage());
                             }
-                        } else { // En caso de que falle algo
-                            // Lanzo un toast diciendo el error que ha ocurddio
-                            showToast("Error en el registro: " + task.getException().getMessage());
                         }
-                    }
-                });
+                    });
+        }else{
+            showToast("El correo no tiene el formato adecuado!!");
+        }
     }
 
     /**
@@ -832,25 +850,29 @@ public class Inicio extends AppCompatActivity {
      * un correo y una clave y procedo a iniciar sesion
      * en firebase con esos valores*/
     public void iniciarConCorreo(String correo, String clave){
-        // Llamo al método para iniciar sesion con email y clave
-        auth.signInWithEmailAndPassword(correo, clave)
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) { // En caso de que todo vaya bien
-                            // Obtengo el usuario autentificado en el movil
-                            FirebaseUser user = auth.getCurrentUser();
-                            // Inicio de sesión exitoso
-                            showToast("Inicio de sesión exitoso");
-                            //Llamo al método para cargar los datos de ese usuario autenticado
-                            cargarDatosUsuario("Correo", user, null);
-                        } else { // En caso de que suceda algun error
-                            // Error al iniciar sesión
-                            String error = task.getException() != null ? task.getException().getMessage() : "Error desconocido";
-                            showToast("Error: " + error);
+        if(isValidEmail(correo)){
+            // Llamo al método para iniciar sesion con email y clave
+            auth.signInWithEmailAndPassword(correo, clave)
+                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) { // En caso de que todo vaya bien
+                                // Obtengo el usuario autentificado en el movil
+                                FirebaseUser user = auth.getCurrentUser();
+                                // Inicio de sesión exitoso
+                                showToast("Inicio de sesión exitoso");
+                                //Llamo al método para cargar los datos de ese usuario autenticado
+                                cargarDatosUsuario("Correo", user, null);
+                            } else { // En caso de que suceda algun error
+                                // Error al iniciar sesión
+                                String error = task.getException() != null ? task.getException().getMessage() : "Error desconocido";
+                                showToast("Error: " + error);
+                            }
                         }
-                    }
-                });
+                    });
+        }else{
+            showToast("El correo no tiene el formato adecuado!!");
+        }
     }
 
     @Override
