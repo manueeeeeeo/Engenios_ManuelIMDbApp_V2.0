@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 // Lanzo un toast diciendo que ese método de inicio de sesión no está activado
                 email = intent.getStringExtra("email");
                 uid = intent.getStringExtra("uidUs");
-                nombre = "";
+                nombre = intent.getStringExtra("name");
                 imagenUrl = "";
             }
         }
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
                                 .into(infoUrlFoto);
                     }
                 }
-            }else{ // En caso de que falle alguna de las condiciones del principio
+            }else if(!imagenUrl.isEmpty() && imagenUrl!=null){ // En caso de que falle alguna de las condiciones del principio
                 // Cargo la imagen con Picasso
                 Picasso.get().load(imagenUrl).into(infoUrlFoto);
             }
@@ -345,8 +345,9 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("Imagen", "No se pudo convertir la imagen");
                     }
                 }
-            } else { // En caso de que la variable sea nula
-                Log.d("Imagen", "No hay imagen guardada en la BD");
+            } else if (imagenUrl != null && !imagenUrl.isEmpty()) { // En caso de que la imagen de la bd sea nula y tengamos una url de facebook o google
+                // La cargamos con picasso
+                Picasso.get().load(imagenUrl).into(infoUrlFoto);
             }
             // Obtengo el valor del nombre de usuario de la base de datos local
             nombreUsuario = cursor.isNull(cursor.getColumnIndex("displayName")) ? "" : cursor.getString(cursor.getColumnIndex("displayName"));
