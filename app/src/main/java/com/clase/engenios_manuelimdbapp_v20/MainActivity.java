@@ -21,13 +21,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.clase.engenios_manuelimdbapp_v20.models.Movie;
 import com.clase.engenios_manuelimdbapp_v20.sync.UsersSync;
 import com.clase.engenios_manuelimdbapp_v20.users.DatabaseUsers;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.annotation.NonNull;
@@ -41,9 +39,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.clase.engenios_manuelimdbapp_v20.databinding.ActivityMainBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Manuel
@@ -68,8 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
     private String message = ""; // Variable para almacenar el mensaje que recibo del otro Intent y así inicio sesión y cierro
     private String uid = ""; // Variable para almacenar y manejar el uid del usuario con sesion iniciada
-    private List<Movie> movieList = new ArrayList<>(); // Lista compartida
-    private boolean datosActualizados = false; // Indicador de cambio de datos
     private DatabaseUsers userdb = null; // Variable para manejar la base de datos local
     private UsersSync sincronizacionUser = null; // Variable para manejar la base de datos en la nube
     private String base64Imagen = ""; // Variable para manejar la imagen que tenemos en la bd local
@@ -117,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 // Lanzo un toast diciendo que ese método de inicio de sesión no está activado
                 email = intent.getStringExtra("email");
                 uid = intent.getStringExtra("uidUs");
-                nombre = "";
+                nombre = intent.getStringExtra("name");
                 imagenUrl = "";
             }
         }
@@ -222,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
                                 .into(infoUrlFoto);
                     }
                 }
-            }else{ // En caso de que falle alguna de las condiciones del principio
+            }else if(!imagenUrl.isEmpty() && imagenUrl!=null){ // En caso de que falle alguna de las condiciones del principio
                 // Cargo la imagen con Picasso
                 Picasso.get().load(imagenUrl).into(infoUrlFoto);
             }
@@ -243,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Configurar el NavigationController
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                R.id.nav_top10, R.id.nav_favorites, R.id.nav_buscar)
                 .setOpenableLayout(drawer)
                 .build();
 
@@ -345,8 +338,9 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("Imagen", "No se pudo convertir la imagen");
                     }
                 }
-            } else { // En caso de que la variable sea nula
-                Log.d("Imagen", "No hay imagen guardada en la BD");
+            } else if (imagenUrl != null && !imagenUrl.isEmpty()) { // En caso de que la imagen de la bd sea nula y tengamos una url de facebook o google
+                // La cargamos con picasso
+                Picasso.get().load(imagenUrl).into(infoUrlFoto);
             }
             // Obtengo el valor del nombre de usuario de la base de datos local
             nombreUsuario = cursor.isNull(cursor.getColumnIndex("displayName")) ? "" : cursor.getString(cursor.getColumnIndex("displayName"));

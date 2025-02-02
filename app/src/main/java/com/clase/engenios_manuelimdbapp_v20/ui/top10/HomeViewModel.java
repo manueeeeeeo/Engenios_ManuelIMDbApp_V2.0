@@ -1,4 +1,4 @@
-package com.clase.engenios_manuelimdbapp_v20.ui.home;
+package com.clase.engenios_manuelimdbapp_v20.ui.top10;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

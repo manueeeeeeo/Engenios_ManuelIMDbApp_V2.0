@@ -3,23 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_top10">
 
     <fragment
-        android:id="@+id/nav_home"
-        android:name="com.clase.engenios_manuelimdbapp_v20.ui.home.HomeFragment"
-        android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/nav_top10"
+        android:name="com.clase.engenios_manuelimdbapp_v20.ui.top10.ViewTop10"
+        android:label="@string/menu_top10"
+        tools:layout="@layout/fragment_top10" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.clase.engenios_manuelimdbapp_v20.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_favorites"
+        android:name="com.clase.engenios_manuelimdbapp_v20.ui.favoriteList.FavoriteMoviesList"
+        android:label="@string/menu_favorites"
+        tools:layout="@layout/fragment_favoritelist" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.clase.engenios_manuelimdbapp_v20.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_buscar"
+        android:name="com.clase.engenios_manuelimdbapp_v20.ui.searchMovies.SearchingMovies"
+        android:label="@string/menu_buscarPelis"
+        tools:layout="@layout/fragment_searchmovies" />
 </navigation>
