@@ -68,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private Toast mensajeToast = null; // Variable para manejar los Toast de está actividad
     private String message = ""; // Variable para almacenar el mensaje que recibo del otro Intent y así inicio sesión y cierro
     private String uid = ""; // Variable para almacenar y manejar el uid del usuario con sesion iniciada
-    private List<Movie> movieList = new ArrayList<>(); // Lista compartida
-    private boolean datosActualizados = false; // Indicador de cambio de datos
     private DatabaseUsers userdb = null; // Variable para manejar la base de datos local
     private UsersSync sincronizacionUser = null; // Variable para manejar la base de datos en la nube
     private String base64Imagen = ""; // Variable para manejar la imagen que tenemos en la bd local
