@@ -74,6 +74,8 @@ public class FavoriteAdapters extends RecyclerView.Adapter<FavoriteAdapters.Favo
                 .load(movie.getPosterPath()) // Establezco la URL de la imagen de la portada
                 .placeholder(R.drawable.baseline_autorenew_24) // Establezco la imagen del placeholder
                 .error(R.drawable.icono_error) // Establezco la imagen en caso de que haya algun error
+                .resize(400, 600) // Reajusto las dimensiones de la foto, porque algunas son muy grandes
+                .centerCrop() // Establezco que se recorte pero se mantengan las proporciones
                 .into(holder.movieImageView); // Establezco el elemento donde se va a cargar la imagen
 
         // Establecemos un evento para cuando hagamos un simple click en la película o serie

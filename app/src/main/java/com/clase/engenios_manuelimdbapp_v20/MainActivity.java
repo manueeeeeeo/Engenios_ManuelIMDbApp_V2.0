@@ -217,7 +217,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }else if(!imagenUrl.isEmpty() && imagenUrl!=null){ // En caso de que falle alguna de las condiciones del principio
                 // Cargo la imagen con Picasso
-                Picasso.get().load(imagenUrl).into(infoUrlFoto);
+                Picasso.get()
+                        .load(imagenUrl)
+                        .resize(300, 300)
+                        .centerCrop()
+                        .into(infoUrlFoto);
             }
         }, 500); // Pequeño retraso para garantizar la carga de la imagen de la BD
 
@@ -291,7 +295,11 @@ public class MainActivity extends AppCompatActivity {
             }
         } else if (imagenUrl != null && !imagenUrl.isEmpty()) { // En caso de que la imagen de la bd sea nula y tengamos una url de facebook o google
             // La cargamos con picasso
-            Picasso.get().load(imagenUrl).into(infoUrlFoto);
+            Picasso.get()
+                    .load(imagenUrl)
+                    .resize(300, 300)
+                    .centerCrop()
+                    .into(infoUrlFoto);
         }
     }
 
@@ -340,7 +348,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else if (imagenUrl != null && !imagenUrl.isEmpty()) { // En caso de que la imagen de la bd sea nula y tengamos una url de facebook o google
                 // La cargamos con picasso
-                Picasso.get().load(imagenUrl).into(infoUrlFoto);
+                Picasso.get()
+                        .load(imagenUrl)
+                        .resize(300, 300)
+                        .centerCrop()
+                        .into(infoUrlFoto);
             }
             // Obtengo el valor del nombre de usuario de la base de datos local
             nombreUsuario = cursor.isNull(cursor.getColumnIndex("displayName")) ? "" : cursor.getString(cursor.getColumnIndex("displayName"));
