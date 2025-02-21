@@ -4,15 +4,18 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +28,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -100,6 +104,9 @@ public class EditarPerfil extends AppCompatActivity {
     private UsersSync sincronizarUsers = null;
 
     private static final int PERMISSION_REQUEST_CODE = 100; // Variable para manejar los permisos del usuario
+
+    // Variable para manejar todos los permisos de la app
+    private ActivityResultLauncher<String[]> obtenerPermisosLauncher = null;
 
     // Permiso para poder acceder a la camara del usuario
     private final ActivityResultLauncher<Intent> cameraResult =
@@ -186,6 +193,27 @@ public class EditarPerfil extends AppCompatActivity {
             return insets;
         });
 
+        // Inicialización del ActivityResultLauncher para manejar todos los permisos
+        obtenerPermisosLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> {
+                    Boolean permisosCamara = result.getOrDefault(Manifest.permission.CAMERA, false);
+                    Boolean permisosAlmacenamiento;
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permisosAlmacenamiento = result.getOrDefault(Manifest.permission.READ_MEDIA_IMAGES, false);
+                    } else {
+                        permisosAlmacenamiento = result.getOrDefault(Manifest.permission.READ_EXTERNAL_STORAGE, false);
+                    }
+
+                    if (permisosCamara && permisosAlmacenamiento) {
+                        showImagePickerDialog();
+                    } else {
+                        Toast.makeText(this, "Permisos denegados. No se puede seleccionar la imagen.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
         // Inicializo el autentificador de firebase
         auth = FirebaseAuth.getInstance();
         // Inicializo la base de datos en la nube de firebase
@@ -259,15 +287,20 @@ public class EditarPerfil extends AppCompatActivity {
         btnElegirImagen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (ContextCompat.checkSelfPermission(EditarPerfil.this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-                        ContextCompat.checkSelfPermission(EditarPerfil.this, android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
-                    ActivityCompat.requestPermissions(EditarPerfil.this,
-                            new String[]{android.Manifest.permission.CAMERA, android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                            PERMISSION_REQUEST_CODE);
+                String[] permisosSolicitados;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permisosSolicitados = new String[]{
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_MEDIA_IMAGES
+                    };
                 } else {
-                    showImagePickerDialog();
+                    permisosSolicitados = new String[]{
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                    };
                 }
+
+                obtenerPermisosLauncher.launch(permisosSolicitados);
             }
         });
 
@@ -402,12 +435,46 @@ public class EditarPerfil extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+            boolean allPermissionsGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (allPermissionsGranted) {
                 showImagePickerDialog();
             } else {
-                showToast("Permisos necesarios no otorgados");
+                boolean shouldShowRationale = false;
+                for (String permission : permissions) {
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                        shouldShowRationale = true;
+                        break;
+                    }
+                }
+
+                if (shouldShowRationale) {
+                    // Si el usuario marcó "No preguntar de nuevo". Le redirige a la configuración propia del dispositivo
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                } else {
+                    showToast("Permisos necesarios no otorgados");
+                }
             }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void requestGalleryPermissionForApi33AndAbove() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.READ_MEDIA_IMAGES},
+                    PERMISSION_REQUEST_CODE);
+        } else {
+            showImagePickerDialog();
         }
     }
 
